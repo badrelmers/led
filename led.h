@@ -653,7 +653,9 @@ typedef struct {
     size_t func_count;
 
     struct {
+        size_t line_read_count;
         size_t line_match_count;
+        size_t line_write_count;
         size_t file_in_count;
         size_t file_out_count;
         size_t file_match_count;

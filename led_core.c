@@ -644,6 +644,7 @@ bool led_process_read() {
             led.line_read.zone_stop = led.line_read.lstr.len;
             led.line_read.selected = false;
             led.sel.total_count++;
+            led.report.line_read_count++;
             led_debug("led_process_read: read line num=%d len=%d", led.sel.total_count, led.line_read.lstr.len);
         }
         else
@@ -660,6 +661,7 @@ void led_process_write() {
         led_debug("led_process_write: write line to file=%s", led_str_str(&led.file_out.name));
         fwrite(led_str_str(&led.line_write.lstr), sizeof *led_str_str(&led.line_write.lstr), led_str_len(&led.line_write.lstr), led.file_out.file);
         fflush(led.file_out.file);
+        led.report.line_write_count++;
     }
     led_line_reset(&led.line_write);
 }
@@ -779,10 +781,11 @@ void led_process_functions() {
 }
 
 void led_report() {
-    fprintf(stderr, "\nLED report:\n");
-    fprintf(stderr, "Line match count: %ld\n", led.report.line_match_count);
-    fprintf(stderr, "\n");
-    fprintf(stderr, "File input count: %ld\n", led.report.file_in_count);
-    fprintf(stderr, "File output count: %ld\n", led.report.file_out_count);
-    fprintf(stderr, "File match count: %ld\n", led.report.file_match_count);
+    fprintf(stderr, "\n-- LED report --\n");
+    fprintf(stderr, "line_read_count:\t%ld\n", led.report.line_read_count);
+    fprintf(stderr, "line_match_count:\t%ld\n", led.report.line_match_count);
+    fprintf(stderr, "line_write_count:\t%ld\n", led.report.line_write_count);
+    fprintf(stderr, "file_input_count:\t%ld\n", led.report.file_in_count);
+    fprintf(stderr, "file_output_count:\t%ld\n", led.report.file_out_count);
+    fprintf(stderr, "file_match_count:\t%ld\n", led.report.file_match_count);
 }
