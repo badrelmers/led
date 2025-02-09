@@ -750,33 +750,33 @@ bool led_process_selector() {
 }
 
 void led_process_functions() {
-    led_debug("led_process_functions");
-    led_debug("Process line prep (isinit: %d len: %d)", led_line_isinit(&led.line_prep), led_str_len(&led.line_prep.lstr));
+    led_debug("led_process_functions: Process line prep (isinit: %d len: %d)", led_line_isinit(&led.line_prep), led_str_len(&led.line_prep.lstr));
     if (led_line_isinit(&led.line_prep)) {
-        led_debug("prep line is init");
+        led_debug("led_process_functions: prep line is init");
         if (led_line_isselected(&led.line_prep)) {
-            led_debug("prep line is selected");
+            led_debug("led_process_functions: prep line is selected");
             if (led.func_count > 0) {
                 for (size_t ifunc = 0; ifunc < led.func_count; ifunc++) {
                     led_fn_t* pfunc = &led.func_list[ifunc];
                     led_fn_desc_t* pfn_desc = led_fn_table_descriptor(pfunc->id);
                     led.report.line_match_count++;
-                    led_debug("Process function %s", pfn_desc->long_name);
+                    led_debug("led_process_functions: function: %s --> call", pfn_desc->long_name);
                     (pfn_desc->impl)(pfunc);
                     led_line_cpy(&led.line_prep, &led.line_write);
+                    led_debug("led_process_functions: function: %s --> result:\n%s", pfn_desc->long_name, led_str_str(&led.line_write.lstr));
                 }
             }
             else {
-                led_debug("No function copy (len: %d)", led_str_len(&led.line_prep.lstr));
+                led_debug("led_process_functions: no function, copy (len: %d)", led_str_len(&led.line_prep.lstr));
                 led_line_cpy(&led.line_write, &led.line_prep);
             }
         }
         else if (!led.opt.output_selected) {
-            led_debug("Copy unselected to dest");
+            led_debug("led_process_functions: copy unselected to dest");
             led_line_cpy(&led.line_write, &led.line_prep);
         }
     }
-    led_debug("Process result line write (len=%d)", led_str_len(&led.line_write.lstr));
+    led_debug("led_process_functions: result line (len=%d)", led_str_len(&led.line_write.lstr));
     led_line_reset(&led.line_prep);
 }
 
