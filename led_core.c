@@ -374,7 +374,8 @@ void led_init(int argc, char* argv[]) {
         if (arg_section == ARGS_SEC_FILES) {
             led.file_names = argv + argi;
             led.file_count = argc - argi;
-            led_debug("led_init: rg is file=%s", led_str_str(&arg));
+            led_debug("led_init: arg is file names with count=%lu", led.file_count);
+            break;
         }
         else if (arg_section < ARGS_SEC_FILES && led_init_opt(&arg)) {
             if (led.opt.file_in) arg_section = ARGS_SEC_FILES;
