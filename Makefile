@@ -43,6 +43,7 @@ clean:
 	rm -f *.o $(APP) $(APP)test
 	rm -f ~/.local/bin/$(APP)
 	rm -f *.tgz
+	rm -rf test
 
 distclean: clean
 

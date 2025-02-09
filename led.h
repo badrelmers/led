@@ -52,47 +52,47 @@ void led_debug(const char* message, ...);
 // https://dev.to/rdentato/utf-8-strings-in-c-2-3-3kp1
 //------------------------------------------------------------------------------
 
-typedef uint32_t u8c_t;
+typedef uint32_t led_uchar_t;
 
-extern const size_t led_u8c_size_table[];
+extern const size_t led_uchar_size_table[];
 
-inline size_t led_u8c_size(char* str) {
-    return led_u8c_size_table[(((uint8_t *)(str))[0] & 0xFF) >> 4];
+inline size_t led_uchar_size(char* str) {
+    return led_uchar_size_table[(((uint8_t *)(str))[0] & 0xFF) >> 4];
 }
 
-inline bool led_u8c_iscont(char c) {
+inline bool led_uchar_iscont(char c) {
     return (c & 0xC0) == 0x80;
 }
 
-inline bool led_u8c_isalnum(u8c_t c) {
+inline bool led_uchar_isalnum(led_uchar_t c) {
     return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
 
-inline bool led_u8c_isdigit(u8c_t c) {
+inline bool led_uchar_isdigit(led_uchar_t c) {
     return (c >= '0' && c <= '9');
 }
 
-inline bool led_u8c_isspace(u8c_t c) {
+inline bool led_uchar_isspace(led_uchar_t c) {
     return (c == ' ' || c == '\t' || c == '\r' || c == '\n');
 }
 
-inline u8c_t led_u8c_tolower(u8c_t c) {
+inline led_uchar_t led_uchar_tolower(led_uchar_t c) {
     if (c >= 'A' && c <= 'Z') c = tolower((char)c);
     return c;
 }
-inline u8c_t led_u8c_toupper(u8c_t c) {
+inline led_uchar_t led_uchar_toupper(led_uchar_t c) {
     if (c >= 'a' && c <= 'z') c = toupper((char)c);
     return c;
 }
 
-bool led_u8c_isvalid(u8c_t c);
+bool led_uchar_isvalid(led_uchar_t c);
 
-u8c_t led_u8c_encode(uint32_t code);
-uint32_t led_u8c_decode(u8c_t c);
+led_uchar_t led_uchar_encode(uint32_t code);
+uint32_t led_uchar_decode(led_uchar_t c);
 
-size_t led_u8c_from_str(char* str, u8c_t* u8chr);
-size_t led_u8c_from_rstr(char* str, size_t len, u8c_t* u8chr);
-size_t led_u8c_to_str(char* str, u8c_t u8chr);
+size_t led_uchar_from_str(char* str, led_uchar_t* uchar);
+size_t led_uchar_from_rstr(char* str, size_t len, led_uchar_t* uchar);
+size_t led_uchar_to_str(char* str, led_uchar_t uchar);
 
 
 //------------------------------------------------------------------------------
@@ -105,150 +105,150 @@ typedef struct {
     char* str;
     size_t len;
     size_t size;
-} led_u8s_t;
+} led_str_t;
 
-#define led_u8s_init_buf(VAR,BUF) led_u8s_init(VAR,BUF,sizeof(BUF))
-#define led_u8s_init_str(VAR,STR) led_u8s_init(VAR,(char*)STR,0)
+#define led_str_init_buf(VAR,BUF) led_str_init(VAR,BUF,sizeof(BUF))
+#define led_str_init_str(VAR,STR) led_str_init(VAR,(char*)STR,0)
 
-#define led_u8s_decl_str(VAR,STR) \
-    led_u8s_t VAR; \
-    led_u8s_init_str(&VAR,STR)
+#define led_str_decl_str(VAR,STR) \
+    led_str_t VAR; \
+    led_str_init_str(&VAR,STR)
 
-#define led_u8s_decl(VAR,LEN) \
-    led_u8s_t VAR; \
+#define led_str_decl(VAR,LEN) \
+    led_str_t VAR; \
     char VAR##_buf[LEN]; \
     VAR##_buf[0] = '\0'; \
-    led_u8s_init_buf(&VAR,VAR##_buf)
+    led_str_init_buf(&VAR,VAR##_buf)
 
-#define led_u8s_decl_cpy(VAR,SRC) \
-    led_u8s_t VAR; \
+#define led_str_decl_cpy(VAR,SRC) \
+    led_str_t VAR; \
     char VAR##_buf[SRC.len]; \
-    led_u8s_init(&VAR,VAR##_buf,SRC.len); \
-    led_u8s_cpy(&VAR, &SRC)
+    led_str_init(&VAR,VAR##_buf,SRC.len); \
+    led_str_cpy(&VAR, &SRC)
 
-#define led_u8s_foreach_char(VAR) \
+#define led_str_foreach_char(VAR) \
     size_t i = 0; \
-    for (u8c_t c = led_u8s_char_at(VAR, i); i < led_u8s_len(VAR); c = led_u8s_char_next(VAR, &i))
+    for (led_uchar_t c = led_str_char_at(VAR, i); i < led_str_len(VAR); c = led_str_char_next(VAR, &i))
 
-#define led_u8s_foreach_char_zone(VAR, START, STOP) \
+#define led_str_foreach_char_zone(VAR, START, STOP) \
     size_t i = START; \
-    for (u8c_t c = led_u8s_char_at(VAR, i); i < STOP; c = led_u8s_char_next(VAR, &i))
+    for (led_uchar_t c = led_str_char_at(VAR, i); i < STOP; c = led_str_char_next(VAR, &i))
 
-inline size_t led_u8s_len(led_u8s_t* lstr) {
+inline size_t led_str_len(led_str_t* lstr) {
     return lstr->len;
 }
 
-inline char* led_u8s_str(led_u8s_t* lstr) {
+inline char* led_str_str(led_str_t* lstr) {
     return lstr->str;
 }
 
-inline size_t led_u8s_size(led_u8s_t* lstr) {
+inline size_t led_str_size(led_str_t* lstr) {
     return lstr->size;
 }
 
-inline bool led_u8s_isinit(led_u8s_t* lstr) {
+inline bool led_str_isinit(led_str_t* lstr) {
     return lstr->str != NULL;
 }
 
-inline bool led_u8s_isempty(led_u8s_t* lstr) {
-    return led_u8s_isinit(lstr) && lstr->len == 0;
+inline bool led_str_isempty(led_str_t* lstr) {
+    return led_str_isinit(lstr) && lstr->len == 0;
 }
 
-inline bool led_u8s_iscontent(led_u8s_t* lstr) {
-    return led_u8s_isinit(lstr) && lstr->len > 0;
+inline bool led_str_iscontent(led_str_t* lstr) {
+    return led_str_isinit(lstr) && lstr->len > 0;
 }
 
-inline bool led_u8s_isfull(led_u8s_t* lstr) {
-    return led_u8s_isinit(lstr) && lstr->len + 1 == lstr->size;
+inline bool led_str_isfull(led_str_t* lstr) {
+    return led_str_isinit(lstr) && lstr->len + 1 == lstr->size;
 }
 
-inline led_u8s_t* led_u8s_reset(led_u8s_t* lstr) {
+inline led_str_t* led_str_reset(led_str_t* lstr) {
     memset(lstr, 0, sizeof(*lstr));
     return lstr;
 }
 
-led_u8s_t* led_u8s_init(led_u8s_t* lstr, char* buf, size_t size);
+led_str_t* led_str_init(led_str_t* lstr, char* buf, size_t size);
 
-inline led_u8s_t* led_u8s_empty(led_u8s_t* lstr) {
+inline led_str_t* led_str_empty(led_str_t* lstr) {
     lstr->str[0] = '\0';
     lstr->len = 0;
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_clone(led_u8s_t* lstr, led_u8s_t* lstr_src) {
+inline led_str_t* led_str_clone(led_str_t* lstr, led_str_t* lstr_src) {
     lstr->str = lstr_src->str;
     lstr->len = lstr_src->len;
     lstr->size = lstr_src->size;
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_cpy(led_u8s_t* lstr, led_u8s_t* lstr_src) {
+inline led_str_t* led_str_cpy(led_str_t* lstr, led_str_t* lstr_src) {
     for(lstr->len = 0; lstr->len < lstr_src->len && lstr->len + 1 < lstr->size; lstr->len++)
         lstr->str[lstr->len] = lstr_src->str[lstr->len];
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_cpy_chars(led_u8s_t* lstr, const char* str) {
+inline led_str_t* led_str_cpy_chars(led_str_t* lstr, const char* str) {
     for(lstr->len=0; str[lstr->len] && lstr->len+1 < lstr->size; lstr->len++)
         lstr->str[lstr->len]=str[lstr->len];
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_app(led_u8s_t* lstr, led_u8s_t* lstr_src) {
+inline led_str_t* led_str_app(led_str_t* lstr, led_str_t* lstr_src) {
     for(size_t i = 0; i<lstr_src->len && lstr->len+1 < lstr->size; i++, lstr->len++)
         lstr->str[lstr->len] = lstr_src->str[i];
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_app_str(led_u8s_t* lstr, const char* str) {
+inline led_str_t* led_str_app_str(led_str_t* lstr, const char* str) {
     for(size_t i = 0; str[i] && lstr->len+1 < lstr->size; i++, lstr->len++)
         lstr->str[lstr->len] = str[i];
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_app_zn(led_u8s_t* lstr, led_u8s_t* lstr_src, size_t start, size_t stop) {
+inline led_str_t* led_str_app_zn(led_str_t* lstr, led_str_t* lstr_src, size_t start, size_t stop) {
     for(size_t i = start; i < stop && lstr_src->str[i] && lstr->len+1 < lstr->size; i++, lstr->len++)
         lstr->str[lstr->len] = lstr_src->str[i];
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_app_char(led_u8s_t* lstr, u8c_t u8chr) {
+inline led_str_t* led_str_app_char(led_str_t* lstr, led_uchar_t uchar) {
     char buf[4];
     char* str = buf;
-    size_t u8chr_len = led_u8c_to_str(str, u8chr);
-    if (lstr->len + u8chr_len < lstr->size) {
-        while (u8chr_len) {
+    size_t uchar_len = led_uchar_to_str(str, uchar);
+    if (lstr->len + uchar_len < lstr->size) {
+        while (uchar_len) {
             lstr->str[lstr->len++] = *(str++);
-            u8chr_len--;
+            uchar_len--;
         }
         lstr->str[lstr->len] = '\0';
     }
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_trunk_char(led_u8s_t* lstr, u8c_t u8chr) {
-    u8c_t c = 0;
-    size_t u8chr_len = led_u8c_from_rstr(lstr->str, lstr->len, &c);
-    // led_debug("led_u8s_trunk_char - len=%lu", u8chr_len);
-    if (u8chr == c) {
-        lstr->len -= u8chr_len;
+inline led_str_t* led_str_trunk_char(led_str_t* lstr, led_uchar_t uchar) {
+    led_uchar_t c = 0;
+    size_t uchar_len = led_uchar_from_rstr(lstr->str, lstr->len, &c);
+    // led_debug("led_str_trunk_char - len=%lu", uchar_len);
+    if (uchar == c) {
+        lstr->len -= uchar_len;
         lstr->str[lstr->len] = '\0';
     }
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_trunk_char_last(led_u8s_t* lstr) {
-    while ( lstr->len > 0 && led_u8c_iscont(--(lstr->len)) );
+inline led_str_t* led_str_trunk_char_last(led_str_t* lstr) {
+    while ( lstr->len > 0 && led_uchar_iscont(--(lstr->len)) );
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_trunk(led_u8s_t* lstr, size_t len) {
+inline led_str_t* led_str_trunk(led_str_t* lstr, size_t len) {
     if (len < lstr->len) {
         lstr->len = len;
         lstr->str[lstr->len] = '\0';
@@ -256,7 +256,7 @@ inline led_u8s_t* led_u8s_trunk(led_u8s_t* lstr, size_t len) {
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_trunk_end(led_u8s_t* lstr, size_t len) {
+inline led_str_t* led_str_trunk_end(led_str_t* lstr, size_t len) {
     if (len < lstr->len) {
         lstr->len -= len;
         lstr->str[lstr->len] = '\0';
@@ -264,13 +264,13 @@ inline led_u8s_t* led_u8s_trunk_end(led_u8s_t* lstr, size_t len) {
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_rtrim(led_u8s_t* lstr) {
+inline led_str_t* led_str_rtrim(led_str_t* lstr) {
     while(lstr->len > 0 && isspace(lstr->str[lstr->len-1])) lstr->len--;
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_ltrim(led_u8s_t* lstr) {
+inline led_str_t* led_str_ltrim(led_str_t* lstr) {
     size_t i=0,j=0;
     for(; i < lstr->len && isspace(lstr->str[i]); i++);
     for(; i < lstr->len; i++,j++)
@@ -280,24 +280,24 @@ inline led_u8s_t* led_u8s_ltrim(led_u8s_t* lstr) {
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_trim(led_u8s_t* lstr) {
-    return led_u8s_ltrim(led_u8s_rtrim(lstr));
+inline led_str_t* led_str_trim(led_str_t* lstr) {
+    return led_str_ltrim(led_str_rtrim(lstr));
 }
 
-inline led_u8s_t* led_u8s_cut_next(led_u8s_t* lstr, u8c_t u8chr, led_u8s_t* stok) {
-    led_u8s_clone(stok, lstr);
-    // led_debug("led_u8s_cut_next - lstr=%s tok=%s", lstr->str, stok->str);
-    u8c_t c;
+inline led_str_t* led_str_cut_next(led_str_t* lstr, led_uchar_t uchar, led_str_t* stok) {
+    led_str_clone(stok, lstr);
+    // led_debug("led_str_cut_next - lstr=%s tok=%s", lstr->str, stok->str);
+    led_uchar_t c;
     size_t i = 0;
     while(i < lstr->len) {
-        size_t l = led_u8c_from_str(lstr->str + i, &c);
-        // led_debug("led_u8s_cut_next - i=%u c=%x l=%u", i, c, l);
-        if ( c == u8chr ) {
+        size_t l = led_uchar_from_str(lstr->str + i, &c);
+        // led_debug("led_str_cut_next - i=%u c=%x l=%u", i, c, l);
+        if ( c == uchar ) {
             stok->len = i;
             stok->str[i] = '\0';
             lstr->len -= i+l;
             lstr->str += i+1;
-            // led_debug("led_u8s_cut_next - lstr=%s tok=%s", lstr->str, stok->str);
+            // led_debug("led_str_cut_next - lstr=%s tok=%s", lstr->str, stok->str);
             return lstr;
         }
         i += l;
@@ -308,114 +308,114 @@ inline led_u8s_t* led_u8s_cut_next(led_u8s_t* lstr, u8c_t u8chr, led_u8s_t* stok
     return lstr;
 }
 
-inline u8c_t led_u8s_char_at(led_u8s_t* lstr, size_t idx) {
-    if (led_u8c_iscont(lstr->str[idx])) return '\0';
-    u8c_t u8chr;
-    led_u8c_from_str(lstr->str + idx, &u8chr);
-    return u8chr;
+inline led_uchar_t led_str_char_at(led_str_t* lstr, size_t idx) {
+    if (led_uchar_iscont(lstr->str[idx])) return '\0';
+    led_uchar_t uchar;
+    led_uchar_from_str(lstr->str + idx, &uchar);
+    return uchar;
 }
 
-inline u8c_t led_u8s_char_first(led_u8s_t* lstr) {
-    return led_u8s_char_at(lstr, 0);
+inline led_uchar_t led_str_char_first(led_str_t* lstr) {
+    return led_str_char_at(lstr, 0);
 }
 
-inline u8c_t led_u8s_char_last(led_u8s_t* lstr) {
+inline led_uchar_t led_str_char_last(led_str_t* lstr) {
     if (lstr->len == 0) return '\0';
-    u8c_t u8chr = 0;
+    led_uchar_t uchar = 0;
     size_t idx = lstr->len;
-    while ( idx > 0 && led_u8c_iscont(lstr->str[--idx]) );
-    // led_debug("led_u8s_char_last - len=%lu idx=%lu", lstr->len, idx);
-    led_u8c_from_str(lstr->str + idx, &u8chr);
-    return u8chr;
+    while ( idx > 0 && led_uchar_iscont(lstr->str[--idx]) );
+    // led_debug("led_str_char_last - len=%lu idx=%lu", lstr->len, idx);
+    led_uchar_from_str(lstr->str + idx, &uchar);
+    return uchar;
 }
 
-inline u8c_t led_u8s_char_next(led_u8s_t* lstr, size_t* idx) {
-    u8c_t u8chr;
-    *idx  += led_u8c_from_str(lstr->str + *idx, &u8chr);
-    return u8chr;
+inline led_uchar_t led_str_char_next(led_str_t* lstr, size_t* idx) {
+    led_uchar_t uchar;
+    *idx  += led_uchar_from_str(lstr->str + *idx, &uchar);
+    return uchar;
 }
 
-inline u8c_t led_u8s_char_prev(led_u8s_t* lstr, size_t* idx) {
-    u8c_t u8chr;
-    *idx  -= led_u8c_from_rstr(lstr->str, *idx, &u8chr);
-    return u8chr;
+inline led_uchar_t led_str_char_prev(led_str_t* lstr, size_t* idx) {
+    led_uchar_t uchar;
+    *idx  -= led_uchar_from_rstr(lstr->str, *idx, &uchar);
+    return uchar;
 }
 
-inline char* led_u8s_str_at(led_u8s_t* lstr, size_t idx) {
-    if (led_u8c_iscont(lstr->str[idx])) return '\0';
+inline char* led_str_str_at(led_str_t* lstr, size_t idx) {
+    if (led_uchar_iscont(lstr->str[idx])) return '\0';
     return lstr->str + idx;
 }
 
-inline bool led_u8s_equal(led_u8s_t* lstr1, led_u8s_t* lstr2) {
+inline bool led_str_equal(led_str_t* lstr1, led_str_t* lstr2) {
     return lstr1->len == lstr2->len && strcmp(lstr1->str, lstr2->str) == 0;
 }
 
-inline bool led_u8s_equal_str(led_u8s_t* lstr, const char* str) {
+inline bool led_str_equal_str(led_str_t* lstr, const char* str) {
     return strcmp(lstr->str, str) == 0;
 }
 
-inline bool led_u8s_equal_str_at(led_u8s_t* lstr, const char* str, size_t idx) {
+inline bool led_str_equal_str_at(led_str_t* lstr, const char* str, size_t idx) {
     if ( idx > lstr->len ) return false;
     return strcmp(lstr->str + idx, str) == 0;
 }
 
-inline bool led_u8s_startswith(led_u8s_t* lstr1, led_u8s_t* lstr2) {
+inline bool led_str_startswith(led_str_t* lstr1, led_str_t* lstr2) {
     size_t i = 0;
     for (; i < lstr1->len && lstr2->str[i] && lstr1->str[i] == lstr2->str[i]; i++);
     return lstr2->str[i] == '\0';
 }
 
-inline bool led_u8s_startswith_at(led_u8s_t* lstr1, led_u8s_t* lstr2, size_t start) {
-    if ( led_u8c_iscont(lstr1->str[start]) ) return false;
+inline bool led_str_startswith_at(led_str_t* lstr1, led_str_t* lstr2, size_t start) {
+    if ( led_uchar_iscont(lstr1->str[start]) ) return false;
     size_t i = 0;
     for (; start < lstr1->len && i < lstr2->len && lstr1->str[start] == lstr2->str[i]; i++, start++);
     return lstr2->str[i] == '\0';
 }
 
-inline bool led_u8s_startswith_str(led_u8s_t* lstr, const char* str) {
+inline bool led_str_startswith_str(led_str_t* lstr, const char* str) {
     size_t i = 0;
     for (; i < lstr->len && str[i] && lstr->str[i] == str[i]; i++);
     return str[i] == '\0';
 }
 
-inline bool led_u8s_startswith_str_at(led_u8s_t* lstr, const char* str, size_t start) {
-    if ( led_u8c_iscont(lstr->str[start]) ) return false;
+inline bool led_str_startswith_str_at(led_str_t* lstr, const char* str, size_t start) {
+    if ( led_uchar_iscont(lstr->str[start]) ) return false;
     size_t i = 0;
     for (; start < lstr->len && str[i] && lstr->str[start] == str[i]; i++, start++);
     return str[i] == '\0';
 }
 
-inline size_t led_u8s_find_char_zn(led_u8s_t* lstr, u8c_t c, size_t start, size_t stop) {
+inline size_t led_str_find_char_zn(led_str_t* lstr, led_uchar_t c, size_t start, size_t stop) {
     while( start < stop ) {
         size_t pos = start;
-        if (led_u8s_char_next(lstr, &start) == c) return pos;
+        if (led_str_char_next(lstr, &start) == c) return pos;
     }
     return lstr->len;
 }
 
-inline size_t led_u8s_find_char(led_u8s_t* lstr, u8c_t c) {
-    return led_u8s_find_char_zn(lstr, c, 0, lstr->len);
+inline size_t led_str_find_char(led_str_t* lstr, led_uchar_t c) {
+    return led_str_find_char_zn(lstr, c, 0, lstr->len);
 }
 
-inline size_t led_u8s_rfind_char_zn(led_u8s_t* lstr, u8c_t c, size_t start, size_t stop) {
-    u8c_t u8chr;
+inline size_t led_str_rfind_char_zn(led_str_t* lstr, led_uchar_t c, size_t start, size_t stop) {
+    led_uchar_t uchar;
     while( stop > start )
-        if ( !led_u8c_iscont(lstr->str[--stop]) ) {
-            led_u8c_from_str(lstr->str + stop, &u8chr);
-            if ( u8chr == c ) return stop;
+        if ( !led_uchar_iscont(lstr->str[--stop]) ) {
+            led_uchar_from_str(lstr->str + stop, &uchar);
+            if ( uchar == c ) return stop;
         }
     return lstr->len;
 }
 
-inline size_t led_u8s_rfind_char(led_u8s_t* lstr, u8c_t c) {
-    return led_u8s_rfind_char_zn(lstr, c, 0, lstr->len);
+inline size_t led_str_rfind_char(led_str_t* lstr, led_uchar_t c) {
+    return led_str_rfind_char_zn(lstr, c, 0, lstr->len);
 }
 
-inline bool led_u8s_ischar(led_u8s_t* lstr, u8c_t c) {
-    return led_u8s_find_char(lstr, c) < lstr->len;
+inline bool led_str_ischar(led_str_t* lstr, led_uchar_t c) {
+    return led_str_find_char(lstr, c) < lstr->len;
 }
 
-inline size_t led_u8s_find(led_u8s_t* lstr1, led_u8s_t* lstr2) {
+inline size_t led_str_find(led_str_t* lstr1, led_str_t* lstr2) {
     size_t i=0, j=0;
     for(; i < lstr1->len && lstr2->str[j]; i++)
         if (lstr1->str[i] == lstr2->str[j]) j++;
@@ -423,14 +423,14 @@ inline size_t led_u8s_find(led_u8s_t* lstr1, led_u8s_t* lstr2) {
     return lstr2->str[j] ? lstr1->len: i - j;
 }
 
-inline led_u8s_t* led_u8s_basename(led_u8s_t* lstr) {
+inline led_str_t* led_str_basename(led_str_t* lstr) {
     lstr->str = basename(lstr->str);
     lstr->len = strlen(lstr->str);
     lstr->size = lstr->len + 1;
     return lstr;
 }
 
-inline led_u8s_t* led_u8s_dirname(led_u8s_t* lstr) {
+inline led_str_t* led_str_dirname(led_str_t* lstr) {
     lstr->str = basename(lstr->str);
     lstr->len = strlen(lstr->str);
     lstr->size = lstr->len + 1;
@@ -456,19 +456,19 @@ void led_regex_init();
 void led_regex_free();
 
 pcre2_code* led_regex_compile(const char* pat);
-bool led_u8s_match(led_u8s_t* lstr, pcre2_code* regex);
-bool led_u8s_match_offset(led_u8s_t* lstr, pcre2_code* regex, size_t* pzone_start, size_t* pzone_stop);
+bool led_str_match(led_str_t* lstr, pcre2_code* regex);
+bool led_str_match_offset(led_str_t* lstr, pcre2_code* regex, size_t* pzone_start, size_t* pzone_stop);
 
-inline pcre2_code* led_u8s_regex_compile(led_u8s_t* pat) {
+inline pcre2_code* led_str_regex_compile(led_str_t* pat) {
     return led_regex_compile(pat->str);
 }
 
-inline bool led_u8s_match_pat(led_u8s_t* lstr, const char* pat) {
-    return led_u8s_match(lstr, led_regex_compile(pat));
+inline bool led_str_match_pat(led_str_t* lstr, const char* pat) {
+    return led_str_match(lstr, led_regex_compile(pat));
 }
 
-inline bool led_u8s_isblank(led_u8s_t* lstr) {
-    return led_u8s_match(lstr, LED_REGEX_BLANK_LINE) > 0;
+inline bool led_str_isblank(led_str_t* lstr) {
+    return led_str_match(lstr, LED_REGEX_BLANK_LINE) > 0;
 }
 
 //-----------------------------------------------
@@ -509,7 +509,7 @@ inline bool led_u8s_isblank(led_u8s_t* lstr) {
 //-----------------------------------------------
 
 typedef struct {
-    led_u8s_t lstr;
+    led_str_t lstr;
     char buf[LED_BUF_MAX+1];
     size_t zone_start;
     size_t zone_stop;
@@ -523,26 +523,26 @@ inline led_line_t* led_line_reset(led_line_t* pline) {
 
 inline led_line_t* led_line_init(led_line_t* pline) {
     led_line_reset(pline);
-    led_u8s_init_buf(&pline->lstr, pline->buf);
+    led_str_init_buf(&pline->lstr, pline->buf);
     return pline;
 }
 
 inline led_line_t* led_line_cpy(led_line_t* pline, led_line_t* pline_src) {
     pline->buf[0] = '\0';
-    if (led_u8s_isinit(&pline_src->lstr)) {
-        led_u8s_init_buf(&pline->lstr, pline->buf);
-        led_u8s_cpy(&pline->lstr, &pline_src->lstr);
+    if (led_str_isinit(&pline_src->lstr)) {
+        led_str_init_buf(&pline->lstr, pline->buf);
+        led_str_cpy(&pline->lstr, &pline_src->lstr);
     }
     else
-        led_u8s_reset(&pline->lstr);
+        led_str_reset(&pline->lstr);
     pline->selected = pline_src->selected;
     pline->zone_start = 0;
-    pline->zone_stop = led_u8s_len(&pline_src->lstr);
+    pline->zone_stop = led_str_len(&pline_src->lstr);
     return pline;
 }
 
 inline bool led_line_isinit(led_line_t* pline) {
-    return led_u8s_isinit(&pline->lstr);
+    return led_str_isinit(&pline->lstr);
 }
 
 inline bool led_line_select(led_line_t* pline, bool selected) {
@@ -555,17 +555,17 @@ inline bool led_line_isselected(led_line_t* pline) {
 }
 
 inline led_line_t* led_line_append_zone(led_line_t* pline, led_line_t* pline_src) {
-    led_u8s_app_zn(&pline->lstr, &pline_src->lstr, pline_src->zone_start, pline_src->zone_stop);
+    led_str_app_zn(&pline->lstr, &pline_src->lstr, pline_src->zone_start, pline_src->zone_stop);
     return pline;
 }
 
 inline led_line_t* led_line_append_before_zone(led_line_t* pline, led_line_t* pline_src) {
-    led_u8s_app_zn(&pline->lstr, &pline_src->lstr, 0, pline_src->zone_start);
+    led_str_app_zn(&pline->lstr, &pline_src->lstr, 0, pline_src->zone_start);
     return pline;
 }
 
 inline led_line_t* led_line_append_after_zone(led_line_t* pline, led_line_t* pline_src) {
-    led_u8s_app_zn(&pline->lstr, &pline_src->lstr, pline_src->zone_stop, pline_src->lstr.len);
+    led_str_app_zn(&pline->lstr, &pline_src->lstr, pline_src->zone_stop, pline_src->lstr.len);
     return pline;
 }
 
@@ -579,7 +579,7 @@ typedef struct {
     char tmp_buf[LED_BUF_MAX+1];
 
     struct {
-        led_u8s_t lstr;
+        led_str_t lstr;
         long val;
         size_t uval;
         pcre2_code* regex;
@@ -627,9 +627,9 @@ typedef struct {
         bool file_out_unchanged;
         bool file_out_extn;
         bool exec;
-        led_u8s_t file_out_ext;
-        led_u8s_t file_out_dir;
-        led_u8s_t file_out_path;
+        led_str_t file_out_ext;
+        led_str_t file_out_dir;
+        led_str_t file_out_path;
     } opt;
 
     // selector
@@ -667,12 +667,12 @@ typedef struct {
 
     // runtime variables
     struct {
-        led_u8s_t name;
+        led_str_t name;
         char buf_name[LED_FNAME_MAX+1];
         FILE* file;
     } file_in;
     struct {
-        led_u8s_t name;
+        led_str_t name;
         char buf_name[LED_FNAME_MAX+1];
         FILE* file;
     } file_out;
@@ -691,9 +691,9 @@ extern led_t led;
 
 void led_init(int argc, char* argv[]);
 void led_free();
-bool led_init_opt(led_u8s_t* arg);
-bool led_init_func(led_u8s_t* arg);
-bool led_init_sel(led_u8s_t* arg);
+bool led_init_opt(led_str_t* arg);
+bool led_init_func(led_str_t* arg);
+bool led_init_sel(led_str_t* arg);
 void led_init_config();
 void led_help();
 
