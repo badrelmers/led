@@ -88,13 +88,13 @@ bool led_str_match(led_str_t* lstr, pcre2_code* regex) {
 bool led_str_match_offset(led_str_t* lstr, pcre2_code* regex, size_t* pzone_start, size_t* pzone_stop) {
     pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(regex, NULL);
     int rc = pcre2_match(regex, (PCRE2_SPTR)lstr->str, lstr->len, 0, 0, match_data, NULL);
-    led_debug("match_offset %d ", rc);
+    led_debug("led_str_match_offset: rc=%d ", rc);
     if( rc > 0) {
         PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(match_data);
         int iv = (rc - 1) * 2;
         *pzone_start = ovector[iv];
         *pzone_stop = ovector[iv + 1];
-        led_debug("match_offset values %d (%c) - %d (%c)", *pzone_start, lstr->str[*pzone_start], *pzone_stop, lstr->str[*pzone_stop]);
+        led_debug("led_str_match_offset: offset start=%d char=%c stop=%d char=%c", *pzone_start, lstr->str[*pzone_start], *pzone_stop, lstr->str[*pzone_stop]);
     }
     pcre2_match_data_free(match_data);
     return rc > 0;

@@ -75,7 +75,7 @@ void led_assert(bool cond, int code, const char* message, ...) {
             va_start(args, message);
             vsnprintf((char*)led.buf_message, sizeof(led.buf_message), message, args);
             va_end(args);
-            fprintf(stderr, "\e[31m[LED_ERROR] %s\e[0m\n", led.buf_message);
+            fprintf(stderr, "\e[31m[ERROR] %s\e[0m\n", led.buf_message);
         }
         led_free();
         exit(code);
@@ -85,7 +85,7 @@ void led_assert(bool cond, int code, const char* message, ...) {
 void led_assert_pcre(int rc) {
     if (rc < 0) {
         pcre2_get_error_message(rc, led.buf_message, LED_MSG_MAX);
-        fprintf(stderr, "\e[31m[LED_ERROR_PCRE] %s\e[0m\n", led.buf_message);
+        fprintf(stderr, "\e[31m[ERROR] (PCRE) %s\e[0m\n", led.buf_message);
         led_free();
         exit(LED_ERR_PCRE);
     }
@@ -97,7 +97,7 @@ void led_debug(const char* message, ...) {
         va_start(args, message);
         vsnprintf((char*)led.buf_message, LED_MSG_MAX, message, args);
         va_end(args);
-        fprintf(stderr, "\e[34m[LED_DEBUG] %s\e[0m\n", led.buf_message);
+        fprintf(stderr, "\e[34m[DEBUG] %s\e[0m\n", led.buf_message);
     }
 }
 
@@ -108,12 +108,12 @@ void led_debug(const char* message, ...) {
 bool led_init_opt(led_str_t* arg) {
     bool rc = led_str_match_pat(arg, "^-[a-zA-Z]+");
     if (rc) {
-        led_debug("arg option: %s", led_str_str(arg));
+        led_debug("led_init_opt: arg option=%s", led_str_str(arg));
         size_t opti = 1;
         while(opti < arg->len) {
             led_uchar_t opt = led_str_char_next(arg, &opti);
             char* optstr = led_str_str_at(arg, opti);
-            led_debug("option: %c sitcked string: %s", opt, optstr);
+            led_debug("led_init_opt: option=%c sitcked=%s", opt, optstr);
             switch (opt) {
             case 'h':
                 led.opt.help = true;
@@ -158,7 +158,7 @@ bool led_init_opt(led_str_t* arg) {
                 led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", opt);
                 led.opt.file_out = LED_OUTPUT_FILE_WRITE;
                 led_str_init_str(&led.opt.file_out_path, optstr);
-                led_debug("Option path: %s", led_str_str(&led.opt.file_out_path));
+                led_debug("led_init_opt: path=%s", led_str_str(&led.opt.file_out_path));
                 opti = arg->len;
                 break;
             case 'A':
@@ -166,7 +166,7 @@ bool led_init_opt(led_str_t* arg) {
                 led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", opt);
                 led.opt.file_out = LED_OUTPUT_FILE_APPEND;
                 led_str_init(&led.opt.file_out_path, optstr, 0);
-                led_debug("Option path: %s", led_str_str(&led.opt.file_out_path));
+                led_debug("led_init_opt: path=%s", led_str_str(&led.opt.file_out_path));
                 opti = arg->len;
                 break;
             case 'E':
@@ -176,7 +176,7 @@ bool led_init_opt(led_str_t* arg) {
                 led.opt.file_out_extn = atoi(optstr);
                 if (led.opt.file_out_extn <= 0)
                     led_str_init(&led.opt.file_out_ext, optstr, 0);
-                led_debug("Option ext: %s", led_str_str(&led.opt.file_out_ext));
+                led_debug("led_init_opt: ext=%s", led_str_str(&led.opt.file_out_ext));
                 opti =arg->len;
                 break;
             case 'D':
@@ -184,7 +184,7 @@ bool led_init_opt(led_str_t* arg) {
                 led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", opt);
                 led_str_init(&led.opt.file_out_dir, optstr, 0);
                 led.opt.file_out = LED_OUTPUT_FILE_DIR;
-                led_debug("Option dir: %s", led_str_str(&led.opt.file_out_dir));
+                led_debug("led_init_opt: dir=%s", led_str_str(&led.opt.file_out_dir));
                 opti = arg->len;
                 break;
             case 'U':
@@ -217,11 +217,11 @@ bool led_init_func(led_str_t* arg) {
         led_str_cut_next(arg, fsep, &fname);
         size_t ifunc = led.func_count++;
         led_fn_t* pfunc = &led.func_list[ifunc];
-        led_debug("Funcion table max: %d", led_fn_table_size());
+        led_debug("led_init_func: table max=%d", led_fn_table_size());
         for (pfunc->id = 0; pfunc->id < led_fn_table_size(); pfunc->id++) {
             led_fn_desc_t* pfn_desc = led_fn_table_descriptor(pfunc->id);
             if (led_str_equal_str(&fname, pfn_desc->short_name) || led_str_equal_str(&fname, pfn_desc->long_name)) {
-                led_debug("Function found: %d", pfunc->id);
+                led_debug("led_init_func: function found=%d", pfunc->id);
                 break;
             }
         }
@@ -234,11 +234,11 @@ bool led_init_func(led_str_t* arg) {
         led_str_t regx;
         led_str_cut_next(arg, fsep, &regx);
         if (!led_str_isempty(&regx)) {
-            led_debug("Regex found: %s", led_str_str(&regx));
+            led_debug("led_init_func: regex found=%s", led_str_str(&regx));
             pfunc->regex = led_str_regex_compile(&regx);
         }
         else {
-            led_debug("Regex NOT found, fixed to the whole line");
+            led_debug("led_init_func: regex NOT found, fixed to the whole line");
             pfunc->regex = LED_REGEX_ALL_LINE;
         }
 
@@ -248,7 +248,7 @@ bool led_init_func(led_str_t* arg) {
             led_assert(pfunc->arg_count < LED_FARG_MAX, LED_ERR_ARG, "Maximum function argments reached %d", LED_FARG_MAX );
             led_str_t* farg = &(pfunc->arg[pfunc->arg_count++].lstr);
             led_str_cut_next(arg, fsep, farg);
-            led_debug("Function argument found: %s", led_str_str(farg));
+            led_debug("led_init_func: function argument found=%s", led_str_str(farg));
         }
     }
     return is_func;
@@ -258,30 +258,30 @@ bool led_init_sel(led_str_t* arg) {
     bool rc = true;
     if (led_str_match_pat(arg, "^\\+[0-9]+$") && led.sel.type_start == SEL_TYPE_REGEX) {
         led.sel.val_start = strtol(arg->str, NULL, 10);
-        led_debug("Selector start: shift after regex (%d)", led.sel.val_start);
+        led_debug("led_init_sel: selector start: shift after regex=%d", led.sel.val_start);
     }
     else if (!led.sel.type_start) {
         if (led_str_match(arg, LED_REGEX_INTEGER)) {
             led.sel.type_start = SEL_TYPE_COUNT;
             led.sel.val_start = strtol(arg->str, NULL, 10);
-            led_debug("Selector start: type number (%d)", led.sel.val_start);
+            led_debug("led_init_sel: selector start: type number=%d", led.sel.val_start);
         }
         else {
             led.sel.type_start = SEL_TYPE_REGEX;
             led.sel.regex_start = led_str_regex_compile(arg);
-            led_debug("Selector start: type regex (%s)", led_str_str(arg));
+            led_debug("led_init_sel: selector start: type regex=%s", led_str_str(arg));
         }
     }
     else if (!led.sel.type_stop) {
         if (led_str_match(arg, LED_REGEX_INTEGER)) {
             led.sel.type_stop = SEL_TYPE_COUNT;
             led.sel.val_stop = strtol(arg->str, NULL, 10);
-            led_debug("Selector stop: type number (%d)", led.sel.val_stop);
+            led_debug("led_init_sel: selector stop: type number=%d", led.sel.val_stop);
         }
         else {
             led.sel.type_stop = SEL_TYPE_REGEX;
             led.sel.regex_stop = led_str_regex_compile(arg);
-            led_debug("Selector stop: type regex (%s)", led_str_str(arg));
+            led_debug("led_init_sel: selector stop: type regex=%s", led_str_str(arg));
         }
     }
     else rc = false;
@@ -294,32 +294,32 @@ void led_init_config() {
         led_fn_t* pfunc = &led.func_list[ifunc];
 
         led_fn_desc_t* pfn_desc = led_fn_table_descriptor(pfunc->id);
-        led_debug("Configure function: %s (%d)", pfn_desc->long_name, pfunc->id);
+        led_debug("led_init_config: configure function=%s id=%d", pfn_desc->long_name, pfunc->id);
 
         const char* format = pfn_desc->args_fmt;
         for (size_t i=0; format[i] && i < LED_FARG_MAX; i++) {
             if (format[i] == 'R') {
                 led_assert(led_str_isinit(&pfunc->arg[i].lstr), LED_ERR_ARG, "function arg %i: missing regex\n%s", i+1, pfn_desc->help_format);
                 pfunc->arg[i].regex = led_str_regex_compile(&pfunc->arg[i].lstr);
-                led_debug("function arg %i: regex found", i+1);
+                led_debug("led_init_config: function arg=%i regex found", i+1);
             }
             else if (format[i] == 'r') {
                 if (led_str_isinit(&pfunc->arg[i].lstr)) {
                     pfunc->arg[i].regex = led_str_regex_compile(&pfunc->arg[i].lstr);
-                    led_debug("function arg %i: regex found", i+1);
+                    led_debug("led_init_config: function arg=%i regex found", i+1);
                 }
             }
             else if (format[i] == 'N') {
                 led_assert(led_str_isinit(&pfunc->arg[i].lstr), LED_ERR_ARG, "function arg %i: missing number\n%s", i+1, pfn_desc->help_format);
                 pfunc->arg[i].val = atol(led_str_str(&pfunc->arg[i].lstr));
-                led_debug("function arg %i: numeric found: %li", i+1, pfunc->arg[i].val);
+                led_debug("led_init_config: function arg=%i numeric found=%li", i+1, pfunc->arg[i].val);
                 // additionally compute the positive unsigned value to help
                 pfunc->arg[i].uval = pfunc->arg[i].val < 0 ? (size_t)(-pfunc->arg[i].val) : (size_t)pfunc->arg[i].val;
             }
             else if (format[i] == 'n') {
                 if (led_str_isinit(&pfunc->arg[i].lstr)) {
                     pfunc->arg[i].val = atol(led_str_str(&pfunc->arg[i].lstr));
-                    led_debug("function arg %i: numeric found: %li", i+1, pfunc->arg[i].val);
+                    led_debug("led_init_config: function arg=%i: numeric found=%li", i+1, pfunc->arg[i].val);
                     // additionally compute the positive unsigned value to help
                     pfunc->arg[i].uval = pfunc->arg[i].val < 0 ? (size_t)(-pfunc->arg[i].val) : (size_t)pfunc->arg[i].val;
                 }
@@ -329,23 +329,23 @@ void led_init_config() {
                 pfunc->arg[i].val = atol(led_str_str(&pfunc->arg[i].lstr));
                 led_assert(pfunc->arg[i].val >= 0, LED_ERR_ARG, "function arg %i: not a positive number\n%s", i+1, pfn_desc->help_format);
                 pfunc->arg[i].uval = (size_t)pfunc->arg[i].val;
-                led_debug("function arg %i: positive numeric found: %lu", i+1, pfunc->arg[i].uval);
+                led_debug("led_init_config: function arg=%i positive numeric found=%lu", i+1, pfunc->arg[i].uval);
             }
             else if (format[i] == 'p') {
                 if (led_str_isinit(&pfunc->arg[i].lstr)) {
                     pfunc->arg[i].val = atol(led_str_str(&pfunc->arg[i].lstr));
                     led_assert(pfunc->arg[i].val >= 0, LED_ERR_ARG, "function arg %i: not a positive number\n%s", i+1, pfn_desc->help_format);
                     pfunc->arg[i].uval = (size_t)pfunc->arg[i].val;
-                    led_debug("function arg %i: positive numeric found: %lu", i+1, pfunc->arg[i].uval);
+                    led_debug("led_init_config: function arg=%i positive numeric found=%lu", i+1, pfunc->arg[i].uval);
                 }
             }
             else if (format[i] == 'S') {
                 led_assert(led_str_isinit(&pfunc->arg[i].lstr), LED_ERR_ARG, "function arg %i: missing string\n%s", i+1, pfn_desc->help_format);
-                led_debug("function arg %i: string found: %s", i+1, led_str_str(&pfunc->arg[i].lstr));
+                led_debug("led_init_config: function arg=%i string found=%s", i+1, led_str_str(&pfunc->arg[i].lstr));
             }
             else if (format[i] == 's') {
                 if (led_str_isinit(&pfunc->arg[i].lstr)) {
-                    led_debug("function arg %i: string found: %s", i+1, led_str_str(&pfunc->arg[i].lstr));
+                    led_debug("led_init_config: function arg=%i string found=%s", i+1, led_str_str(&pfunc->arg[i].lstr));
                 }
             }
             else {
@@ -356,7 +356,7 @@ void led_init_config() {
 }
 
 void led_init(int argc, char* argv[]) {
-    led_debug("Init");
+    led_debug("led_init:");
 
     led_regex_init();
 
@@ -374,18 +374,18 @@ void led_init(int argc, char* argv[]) {
         if (arg_section == ARGS_SEC_FILES) {
             led.file_names = argv + argi;
             led.file_count = argc - argi;
-            led_debug("Arg is file: %s", led_str_str(&arg));
+            led_debug("led_init: rg is file=%s", led_str_str(&arg));
         }
         else if (arg_section < ARGS_SEC_FILES && led_init_opt(&arg)) {
             if (led.opt.file_in) arg_section = ARGS_SEC_FILES;
-            led_debug("Arg is opt: %s", led_str_str(&arg));
+            led_debug("led_init: arg is opt=%s", led_str_str(&arg));
         }
         else if (arg_section <= ARGS_SEC_FUNCT && led_init_func(&arg)) {
             arg_section = ARGS_SEC_FUNCT;
-            led_debug("Arg is func: %s", led_str_str(&arg));
+            led_debug("led_init: arg is func=%s", led_str_str(&arg));
         }
         else if (arg_section == ARGS_SEC_SELECT && led_init_sel(&arg)) {
-            led_debug("Arg is part of selector: %s", led_str_str(&arg));
+            led_debug("led_init: arg is part of selector=%s", led_str_str(&arg));
         }
         else {
             led_assert(false, LED_ERR_ARG, "Unknown or wrong argument: %s (%s section)", led_str_str(&arg), LED_SEC_TABLE[arg_section]);
@@ -408,8 +408,8 @@ void led_init(int argc, char* argv[]) {
     // pre-configure the processor command
     led_init_config();
 
-    led_debug("Config sel count: %d", led.sel.count);
-    led_debug("Config func count: %d", led.func_count);
+    led_debug("led_init: config sel count=%d", led.sel.count);
+    led_debug("led_init: config func count=%d", led.func_count);
 }
 
 void led_help() {
@@ -491,13 +491,13 @@ for simple automatic word processing based on PCRE2 modern regular expressions.\
 //-----------------------------------------------
 
 void led_file_open_in() {
-    led_debug("led_file_open_in");
+    led_debug("led_file_open_in: ");
     if (led.file_count) {
         led_str_cpy_chars(&led.file_in.name, led.file_names[0]);
         led.file_names++;
         led.file_count--;
         led_str_trim(&led.file_in.name);
-        led_debug("open file from args: %s", led_str_str(&led.file_in.name));
+        led_debug("led_file_open_in: open file from args= %s", led_str_str(&led.file_in.name));
         led.file_in.file = fopen(led_str_str(&led.file_in.name), "r");
         led_assert(led.file_in.file != NULL, LED_ERR_FILE, "File not found: %s", led_str_str(&led.file_in.name));
         led.report.file_in_count++;
@@ -508,7 +508,7 @@ void led_file_open_in() {
         if (fname) {
             led_str_cpy_chars(&led.file_in.name, fname);
             led_str_trim(&led.file_in.name);
-            led_debug("open file from stdin: [%s]", led_str_str(&led.file_in.name));
+            led_debug("led_file_open_in: open file from stdin=%s", led_str_str(&led.file_in.name));
             led.file_in.file = fopen(led_str_str(&led.file_in.name), "r");
             led_assert(led.file_in.file != NULL, LED_ERR_FILE, "File not found: %s", led_str_str(&led.file_in.name));
             led.report.file_in_count++;
@@ -575,7 +575,7 @@ void led_file_close_out() {
     if (led.opt.file_out == LED_OUTPUT_FILE_INPLACE) {
         led_str_cpy(&tmp, &led.file_out.name);
         led_str_trunk_end(&tmp, 5);
-        led_debug("Rename: %s ==> %s", led_str_str(&led.file_out.name), led_str_str(&tmp));
+        led_debug("led_file_close_out: rename=%s to=%s", led_str_str(&led.file_out.name), led_str_str(&tmp));
         int syserr = remove(led_str_str(&tmp));
         led_assert(!syserr, LED_ERR_FILE, "File remove error: %d => %s", syserr, led_str_str(&tmp));
         rename(led_str_str(&led.file_out.name), led_str_str(&tmp));
@@ -597,7 +597,7 @@ void led_file_stdout() {
 }
 
 bool led_file_next() {
-    led_debug("Next file ---------------------------------------------------");
+    led_debug("led_file_next: ---------------------------------------------------");
 
     if (led.opt.file_out && led.file_out.file && ! (led.opt.file_out == LED_OUTPUT_FILE_WRITE || led.opt.file_out == LED_OUTPUT_FILE_APPEND)) {
         led_file_close_out();
@@ -624,8 +624,8 @@ bool led_file_next() {
         led_file_print_out();
     }
 
-    led_debug("Input from: %s", led_str_str(&led.file_in.name));
-    led_debug("Output to: %s", led_str_str(&led.file_out.name));
+    led_debug("led_file_next: input from=%s", led_str_str(&led.file_in.name));
+    led_debug("led_file_next: output to=%s", led_str_str(&led.file_out.name));
 
     led.sel.total_count = 0;
     led.sel.count = 0;
@@ -635,7 +635,7 @@ bool led_file_next() {
 }
 
 bool led_process_read() {
-    led_debug("led_process_read");
+    led_debug("led_process_read: ");
     if (!led_line_isinit(&led.line_read)) {
         led_str_init(&led.line_read.lstr, fgets(led.line_read.buf, sizeof led.line_read.buf, led.file_in.file), sizeof led.line_read.buf);
         if (led_line_isinit(&led.line_read)) {
@@ -644,20 +644,20 @@ bool led_process_read() {
             led.line_read.zone_stop = led.line_read.lstr.len;
             led.line_read.selected = false;
             led.sel.total_count++;
-            led_debug("Read line: (%d) len=%d", led.sel.total_count, led.line_read.lstr.len);
+            led_debug("led_process_read: read line num=%d len=%d", led.sel.total_count, led.line_read.lstr.len);
         }
         else
-            led_debug("Read line is NULL: (%d)", led.sel.total_count);
+            led_debug("led_process_read: read line num=%d is NULL", led.sel.total_count);
     }
     return led_line_isinit(&led.line_read);
 }
 
 void led_process_write() {
-    led_debug("led_process_write");
+    led_debug("led_process_write: ");
     if (led_line_isinit(&led.line_write)) {
-        led_debug("Write line: (%d) len=%d", led.sel.total_count, led_str_len(&led.line_write.lstr));
+        led_debug("led_process_write: write line num=%d len=%d", led.sel.total_count, led_str_len(&led.line_write.lstr));
         led_str_app_char(&led.line_write.lstr, '\n');
-        led_debug("Write line to %s", led_str_str(&led.file_out.name));
+        led_debug("led_process_write: write line to file=%s", led_str_str(&led.file_out.name));
         fwrite(led_str_str(&led.line_write.lstr), sizeof *led_str_str(&led.line_write.lstr), led_str_len(&led.line_write.lstr), led.file_out.file);
         fflush(led.file_out.file);
     }
@@ -665,11 +665,9 @@ void led_process_write() {
 }
 
 void led_process_exec() {
-    led_debug("led_process_exec");
+    led_debug("led_process_exec: ");
     if (led_line_isinit(&led.line_write) && !led_str_isblank(&led.line_write.lstr)) {
-        led_debug("Exec line: (%d) len=%d", led.sel.total_count, led_str_len(&led.line_write.lstr));
-        led_debug("Exec command %s", led_str_str(&led.line_write.lstr));
-
+        led_debug("led_process_exec: exec line num=%d len=%d command=%s", led.sel.total_count, led_str_len(&led.line_write.lstr), led_str_str(&led.line_write.lstr));
         FILE *fp = popen(led_str_str(&led.line_write.lstr), "r");
         led_assert(fp != NULL, LED_ERR_ARG, "Command error");
         led_str_decl(output, 4096);
@@ -683,7 +681,7 @@ void led_process_exec() {
 }
 
 bool led_process_selector() {
-    led_debug("led_process_selector");
+    led_debug("led_process_selector: ");
 
     bool ready = false;
     // stop selection on stop boundary
@@ -711,13 +709,13 @@ bool led_process_selector() {
     led.sel.selected = led.sel.inboundary && led.sel.shift == 0;
     led.line_read.selected = led.sel.selected == !led.opt.invert_selected;
 
-    led_debug("Select: inboundary=%d, shift=%d selected=%d line selected=%d", led.sel.inboundary, led.sel.shift, led.sel.selected, led.line_read.selected);
+    led_debug("led_process_selector: select inboundary=%d, shift=%d selected=%d line selected=%d", led.sel.inboundary, led.sel.shift, led.sel.selected, led.line_read.selected);
 
     if (led.sel.selected) led.sel.count++;
 
     if (led.opt.pack_selected) {
         if (led_line_isselected(&led.line_read)) {
-            led_debug("pack: append to ready");
+            led_debug("led_process_selector: pack: append to ready");
             if (!(led.opt.filter_blank && led_str_isblank(&led.line_read.lstr))) {
                 if (led_str_iscontent(&led.line_prep.lstr))
                     led_str_app_char(&led.line_prep.lstr, '\n');
@@ -727,11 +725,11 @@ bool led_process_selector() {
             led_line_reset(&led.line_read);
         }
         else if (led_line_isselected(&led.line_prep)) {
-            led_debug("pack: ready to process");
+            led_debug("led_process_selector: pack: ready to process");
             ready = true;
         }
         else {
-            led_debug("pack: no selection");
+            led_debug("led_process_selector: pack: no selection");
             if (!(led.opt.filter_blank && led_str_isblank(&led.line_read.lstr)))
                 led_line_cpy(&led.line_prep, &led.line_read);
             led_line_reset(&led.line_read);
@@ -745,12 +743,12 @@ bool led_process_selector() {
         ready = true;
     }
 
-    led_debug("Line ready to process: %d", ready);
+    led_debug("led_process_selector: line ready to process=%d", ready);
     return ready;
 }
 
 void led_process_functions() {
-    led_debug("led_process_functions: Process line prep (isinit: %d len: %d)", led_line_isinit(&led.line_prep), led_str_len(&led.line_prep.lstr));
+    led_debug("led_process_functions: Process line prep isinit=%d len=%d", led_line_isinit(&led.line_prep), led_str_len(&led.line_prep.lstr));
     if (led_line_isinit(&led.line_prep)) {
         led_debug("led_process_functions: prep line is init");
         if (led_line_isselected(&led.line_prep)) {
@@ -760,14 +758,14 @@ void led_process_functions() {
                     led_fn_t* pfunc = &led.func_list[ifunc];
                     led_fn_desc_t* pfn_desc = led_fn_table_descriptor(pfunc->id);
                     led.report.line_match_count++;
-                    led_debug("led_process_functions: function: %s --> call", pfn_desc->long_name);
+                    led_debug("led_process_functions: call=%s", pfn_desc->long_name);
                     (pfn_desc->impl)(pfunc);
                     led_line_cpy(&led.line_prep, &led.line_write);
-                    led_debug("led_process_functions: function: %s --> result:\n%s", pfn_desc->long_name, led_str_str(&led.line_write.lstr));
+                    led_debug("led_process_functions: result=%s", led_str_str(&led.line_write.lstr));
                 }
             }
             else {
-                led_debug("led_process_functions: no function, copy (len: %d)", led_str_len(&led.line_prep.lstr));
+                led_debug("led_process_functions: no function, copy len=%d", led_str_len(&led.line_prep.lstr));
                 led_line_cpy(&led.line_write, &led.line_prep);
             }
         }
@@ -776,7 +774,7 @@ void led_process_functions() {
             led_line_cpy(&led.line_write, &led.line_prep);
         }
     }
-    led_debug("led_process_functions: result line (len=%d)", led_str_len(&led.line_write.lstr));
+    led_debug("led_process_functions: result len=%d line=%s", led_str_len(&led.line_write.lstr), led_str_str(&led.line_write.lstr));
     led_line_reset(&led.line_prep);
 }
 
