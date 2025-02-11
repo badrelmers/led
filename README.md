@@ -17,7 +17,7 @@ It aims to cover in one tool common text search/replace/process transformations 
 - transformed lines can be executed (option)
 - UTF-8 full support in content and regex patterns
 - group lines as multi-lines (option)
-- massive files sets handling
+- massive file sets handling
 - multiple exit code mode
 
 ### Command line syntax
