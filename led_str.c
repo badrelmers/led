@@ -100,6 +100,27 @@ bool led_str_match_offset(led_str_t* lstr, pcre2_code* regex, size_t* pzone_star
     return rc > 0;
 }
 
+led_str_t* led_str_cut_next(led_str_t* lstr, led_uchar_t uchar, led_str_t* stok) {
+    led_str_clone(stok, lstr);
+    led_str_foreach_char(lstr) {
+        // led_debug("led_str_cut_next - i=%u c=%x l=%u", i, c, l);
+        if ( foreach.c == uchar ) {
+            stok->str[foreach.i] = '\0';
+            stok->len = foreach.i;
+            stok->size = foreach.n;
+            lstr->str += foreach.n;
+            lstr->len -= foreach.n;
+            lstr->size -= foreach.n;
+            // led_debug("led_str_cut_next - lstr=%s tok=%s", lstr->str, stok->str);
+            return lstr;
+        }
+    }
+    lstr->str = lstr->str + lstr->len;
+    lstr->len = 0;
+    lstr->size = 0;
+    return lstr;
+}
+
 //-----------------------------------------------
 // LED utf8 functions
 //-----------------------------------------------
@@ -108,54 +129,54 @@ size_t const led_uchar_size_table[] = {
     1,1,1,1,1,1,1,1,0,0,0,0,2,2,3,4
 };
 
-bool led_uchar_isvalid(led_uchar_t c)
-{
-  if (c <= 0x7F) return true;
+// bool led_uchar_isvalid(led_uchar_t c)
+// {
+//   if (c <= 0x7F) return true;
 
-  if (0xC280 <= c && c <= 0xDFBF)
-     return ((c & 0xE0C0) == 0xC080);
+//   if (0xC280 <= c && c <= 0xDFBF)
+//      return ((c & 0xE0C0) == 0xC080);
 
-  if (0xEDA080 <= c && c <= 0xEDBFBF)
-     return 0; // Reject UTF-16 surrogates
+//   if (0xEDA080 <= c && c <= 0xEDBFBF)
+//      return 0; // Reject UTF-16 surrogates
 
-  if (0xE0A080 <= c && c <= 0xEFBFBF)
-     return ((c & 0xF0C0C0) == 0xE08080);
+//   if (0xE0A080 <= c && c <= 0xEFBFBF)
+//      return ((c & 0xF0C0C0) == 0xE08080);
 
-  if (0xF0908080 <= c && c <= 0xF48FBFBF)
-     return ((c & 0xF8C0C0C0) == 0xF0808080);
+//   if (0xF0908080 <= c && c <= 0xF48FBFBF)
+//      return ((c & 0xF8C0C0C0) == 0xF0808080);
 
-  return false;
-}
+//   return false;
+// }
 
-led_uchar_t led_uchar_encode(uint32_t code) {
-    led_uchar_t uc = code;
-    if (code > 0x7F) {
-        uc =  (code & 0x000003F)
-        | (code & 0x0000FC0) << 2
-        | (code & 0x003F000) << 4
-        | (code & 0x01C0000) << 6;
+// led_uchar_t led_uchar_encode(uint32_t code) {
+//     led_uchar_t uc = code;
+//     if (code > 0x7F) {
+//         uc =  (code & 0x000003F)
+//         | (code & 0x0000FC0) << 2
+//         | (code & 0x003F000) << 4
+//         | (code & 0x01C0000) << 6;
 
-        if      (code < 0x0000800) uc |= 0x0000C080;
-        else if (code < 0x0010000) uc |= 0x00E08080;
-        else                       uc |= 0xF0808080;
-    }
-    return uc;
-}
+//         if      (code < 0x0000800) uc |= 0x0000C080;
+//         else if (code < 0x0010000) uc |= 0x00E08080;
+//         else                       uc |= 0xF0808080;
+//     }
+//     return uc;
+// }
 
-uint32_t led_uchar_decode(led_uchar_t c) {
-  uint32_t mask;
-  if (c > 0x7F) {
-    mask = (c <= 0x00EFBFBF) ? 0x000F0000 : 0x003F0000 ;
-    c = ((c & 0x07000000) >> 6) |
-        ((c & mask )      >> 4) |
-        ((c & 0x00003F00) >> 2) |
-         (c & 0x0000003F);
-  }
-  return c;
-}
+// uint32_t led_uchar_decode(led_uchar_t c) {
+//   uint32_t mask;
+//   if (c > 0x7F) {
+//     mask = (c <= 0x00EFBFBF) ? 0x000F0000 : 0x003F0000 ;
+//     c = ((c & 0x07000000) >> 6) |
+//         ((c & mask )      >> 4) |
+//         ((c & 0x00003F00) >> 2) |
+//          (c & 0x0000003F);
+//   }
+//   return c;
+// }
 
 size_t led_uchar_from_str(char* str, led_uchar_t* uchar) {
-    size_t l = led_uchar_size(str);
+    size_t l = led_uchar_size_str(str);
     // led_debug("led_uchar_from_str - len=%lu", l);
     led_uchar_t c = 0;
     for (size_t i = 0; i < l && str[i]; i++)

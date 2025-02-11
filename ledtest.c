@@ -18,6 +18,7 @@
  ***************************************************************************/
 
 #include "led.h"
+#pragma GCC diagnostic ignored "-Wmultichar"
 
 #define test(NAME) printf("-- %s...\n", #NAME);NAME();printf("OK\n")
 

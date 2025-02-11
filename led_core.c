@@ -494,7 +494,7 @@ for simple automatic word processing based on PCRE2 modern regular expressions.\
 void led_file_open_in() {
     led_debug("led_file_open_in: ");
     if (led.file_count) {
-        led_str_cpy_chars(&led.file_in.name, led.file_names[0]);
+        led_str_cpy_str(&led.file_in.name, led.file_names[0]);
         led.file_names++;
         led.file_count--;
         led_str_trim(&led.file_in.name);
@@ -507,7 +507,7 @@ void led_file_open_in() {
         char buf_fname[LED_FNAME_MAX+1];
         char* fname = fgets(buf_fname, LED_FNAME_MAX, stdin);
         if (fname) {
-            led_str_cpy_chars(&led.file_in.name, fname);
+            led_str_cpy_str(&led.file_in.name, fname);
             led_str_trim(&led.file_in.name);
             led_debug("led_file_open_in: open file from stdin=%s", led_str_str(&led.file_in.name));
             led.file_in.file = fopen(led_str_str(&led.file_in.name), "r");
@@ -530,7 +530,7 @@ void led_file_stdin() {
         led_str_empty(&led.file_in.name);
     } else if (led.stdin_ispipe) {
         led.file_in.file = stdin;
-        led_str_cpy_chars(&led.file_in.name, "STDIN");
+        led_str_cpy_str(&led.file_in.name, "STDIN");
     }
 }
 
@@ -594,7 +594,7 @@ void led_file_print_out() {
 
 void led_file_stdout() {
     led.file_out.file = stdout;
-    led_str_cpy_chars(&led.file_out.name, "STDOUT");
+    led_str_cpy_str(&led.file_out.name, "STDOUT");
 }
 
 bool led_file_next() {

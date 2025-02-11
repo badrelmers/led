@@ -56,8 +56,16 @@ typedef uint32_t led_uchar_t;
 
 extern const size_t led_uchar_size_table[];
 
-inline size_t led_uchar_size(char* str) {
+inline char led_uchar_to_char(led_uchar_t c) {
+    return (char)(c & 0xFF);
+}
+
+inline size_t led_uchar_size_str(char* str) {
     return led_uchar_size_table[(((uint8_t *)(str))[0] & 0xFF) >> 4];
+}
+
+inline size_t led_uchar_size(led_uchar_t c) {
+    return led_uchar_size_table[(c & 0xFF) >> 4];
 }
 
 inline bool led_uchar_iscont(char c) {
@@ -65,30 +73,29 @@ inline bool led_uchar_iscont(char c) {
 }
 
 inline bool led_uchar_isalnum(led_uchar_t c) {
-    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+    return isalnum(led_uchar_to_char(c));
 }
 
 inline bool led_uchar_isdigit(led_uchar_t c) {
-    return (c >= '0' && c <= '9');
+    return isdigit(led_uchar_to_char(c));
 }
 
 inline bool led_uchar_isspace(led_uchar_t c) {
-    return (c == ' ' || c == '\t' || c == '\r' || c == '\n');
+    return isspace(led_uchar_to_char(c));
 }
 
 inline led_uchar_t led_uchar_tolower(led_uchar_t c) {
-    if (c >= 'A' && c <= 'Z') c = tolower((char)c);
+    if (c >= 'A' && c <= 'Z') c = tolower(led_uchar_to_char(c));
     return c;
 }
 inline led_uchar_t led_uchar_toupper(led_uchar_t c) {
-    if (c >= 'a' && c <= 'z') c = toupper((char)c);
+    if (c >= 'a' && c <= 'z') c = toupper(led_uchar_to_char(c));
     return c;
 }
 
-bool led_uchar_isvalid(led_uchar_t c);
-
-led_uchar_t led_uchar_encode(uint32_t code);
-uint32_t led_uchar_decode(led_uchar_t c);
+// bool led_uchar_isvalid(led_uchar_t c);
+// led_uchar_t led_uchar_encode(uint32_t code);
+// uint32_t led_uchar_decode(led_uchar_t c);
 
 size_t led_uchar_from_str(char* str, led_uchar_t* uchar);
 size_t led_uchar_from_rstr(char* str, size_t len, led_uchar_t* uchar);
@@ -127,12 +134,14 @@ typedef struct {
     led_str_cpy(&VAR, &SRC)
 
 #define led_str_foreach_char(VAR) \
-    size_t i = 0; \
-    for (led_uchar_t c = led_str_char_at(VAR, i); i < led_str_len(VAR); c = led_str_char_next(VAR, &i))
+    for (struct{size_t i; size_t n; led_uchar_t c;} foreach = {0, led_uchar_size_str((VAR)->str), led_str_char_at(VAR, 0)};\
+        foreach.i < led_str_len(VAR);\
+        foreach.i = foreach.n, foreach.c = led_str_char_next(VAR, &foreach.n))
 
 #define led_str_foreach_char_zone(VAR, START, STOP) \
-    size_t i = START; \
-    for (led_uchar_t c = led_str_char_at(VAR, i); i < STOP; c = led_str_char_next(VAR, &i))
+    for (struct{size_t i; size_t n; led_uchar_t c;} foreach = {START, START + led_uchar_size_str((VAR)->str + START), led_str_char_at(VAR, START)};\
+        foreach.i < STOP;\
+        foreach.i = foreach.n, foreach.c = led_str_char_next(VAR, &foreach.n))
 
 inline size_t led_str_len(led_str_t* lstr) {
     return lstr->len;
@@ -189,7 +198,7 @@ inline led_str_t* led_str_cpy(led_str_t* lstr, led_str_t* lstr_src) {
     return lstr;
 }
 
-inline led_str_t* led_str_cpy_chars(led_str_t* lstr, const char* str) {
+inline led_str_t* led_str_cpy_str(led_str_t* lstr, const char* str) {
     for(lstr->len=0; str[lstr->len] && lstr->len+1 < lstr->size; lstr->len++)
         lstr->str[lstr->len]=str[lstr->len];
     lstr->str[lstr->len] = '\0';
@@ -284,29 +293,7 @@ inline led_str_t* led_str_trim(led_str_t* lstr) {
     return led_str_ltrim(led_str_rtrim(lstr));
 }
 
-inline led_str_t* led_str_cut_next(led_str_t* lstr, led_uchar_t uchar, led_str_t* stok) {
-    led_str_clone(stok, lstr);
-    // led_debug("led_str_cut_next - lstr=%s tok=%s", lstr->str, stok->str);
-    led_uchar_t c;
-    size_t i = 0;
-    while(i < lstr->len) {
-        size_t l = led_uchar_from_str(lstr->str + i, &c);
-        // led_debug("led_str_cut_next - i=%u c=%x l=%u", i, c, l);
-        if ( c == uchar ) {
-            stok->len = i;
-            stok->str[i] = '\0';
-            lstr->len -= i+l;
-            lstr->str += i+1;
-            // led_debug("led_str_cut_next - lstr=%s tok=%s", lstr->str, stok->str);
-            return lstr;
-        }
-        i += l;
-    }
-    stok->len = lstr->len;
-    lstr->str = lstr->str + lstr->len;
-    lstr->len = 0;
-    return lstr;
-}
+led_str_t* led_str_cut_next(led_str_t* lstr, led_uchar_t uchar, led_str_t* stok);
 
 inline led_uchar_t led_str_char_at(led_str_t* lstr, size_t idx) {
     if (led_uchar_iscont(lstr->str[idx])) return '\0';

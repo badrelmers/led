@@ -50,7 +50,7 @@ distclean: clean
 ####### Test
 
 .PHONY: test
-test: $(APP)
+test: $(APP) $(APPTEST)
 	./test.sh
 
 ####### Install an packaging

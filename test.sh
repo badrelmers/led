@@ -2,12 +2,7 @@
 
 SCRIPT_DIR=$(cd $(dirname $0); pwd)
 TEST_DIR=$SCRIPT_DIR/test
-
 TEST=${1:-all}
-
-# echo -e "\nmake:"
-
-# make || exit 1
 
 echo -e "\ncleanup data:"
 
@@ -67,64 +62,68 @@ touch $TEST_DIR/files_to_mv/file2\ to\'\ mv.txt
 
 echo -e "\ntest = $TEST"
 
+
+echo -e "\nunit tests:"
+$SCRIPT_DIR/ledtest || exit 1
+
 if [[ $TEST == 1 || $TEST == all ]]; then
     echo -e "\ntest 1:"
-    cat $TEST_DIR/files_in/file_0 | $SCRIPT_DIR/led -v AA
+    cat $TEST_DIR/files_in/file_0 | $SCRIPT_DIR/led -v AA || exit 1
 fi
 
 if [[ $TEST == 2 || $TEST == all ]]; then
     echo -e "\ntest 2:"
-    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led -v TEST -f
+    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led -v TEST -f || exit 1
 fi
 
 if [[ $TEST == 3 || $TEST == all ]]; then
     echo -e "\ntest 3:"
-    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led -v TEST -F -f
+    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led -v TEST -F -f || exit 1
 fi
 
 if [[ $TEST == 4 || $TEST == all ]]; then
     echo -e "\ntest 4:"
-    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led -v TEST -W$TEST_DIR/files_out/write -f
+    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led -v TEST -W$TEST_DIR/files_out/write -f || exit 1
 fi
 
 if [[ $TEST == 5 || $TEST == all ]]; then
     echo -e "\ntest 5:"
-    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led -v TEST -A$TEST_DIR/files_out/append -f
+    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led -v TEST -A$TEST_DIR/files_out/append -f || exit 1
 fi
 
 if [[ $TEST == 6 || $TEST == all ]]; then
     echo -e "\ntest 6:"
-    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led -v TEST -D$TEST_DIR/files_out -f
+    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led -v TEST -D$TEST_DIR/files_out -f || exit 1
 fi
 
 if [[ $TEST == 7 || $TEST == all ]]; then
     echo -e "\ntest 7:"
-    ls $TEST_DIR/files_in/file_0 | $SCRIPT_DIR/led -v AA -W$TEST_DIR/files_out/file_0 -f | $SCRIPT_DIR/led -v 'TE.*' -W$TEST_DIR/files_out/file_02 -f
+    ls $TEST_DIR/files_in/file_0 | $SCRIPT_DIR/led -v AA -W$TEST_DIR/files_out/file_0 -f | $SCRIPT_DIR/led -v 'TE.*' -W$TEST_DIR/files_out/file_02 -f || exit 1
 fi
 
 if [[ $TEST == 9 || $TEST == all ]]; then
     echo -e "\ntest 9:"
-    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led -v AA -E.out1 -f | $SCRIPT_DIR/led -v 'TE.*' -E.out2 -f
+    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led -v AA -E.out1 -f | $SCRIPT_DIR/led -v 'TE.*' -E.out2 -f || exit 1
 fi
 
 if [[ $TEST == 10 || $TEST == all ]]; then
     echo -e "\ntest 10:"
-    ls $TEST_DIR/files_in/file_pass | $SCRIPT_DIR/led -v _pwd -E.enc 'b64e/_pwd: "(.+)"/' -f | $SCRIPT_DIR/led -v _pwd -E.dec 'b64d/_pwd: "(.+)"/' -f
+    ls $TEST_DIR/files_in/file_pass | $SCRIPT_DIR/led -v _pwd -E.enc 'b64e/_pwd: "(.+)"/' -f | $SCRIPT_DIR/led -v _pwd -E.dec 'b64d/_pwd: "(.+)"/' -f || exit 1
 fi
 
 if [[ $TEST == 11 || $TEST == all ]]; then
     echo -e "\ntest 11:"
-    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led _pwd -F 'b64e/(.+)' -f | $SCRIPT_DIR/led -r _pwd -E.dec 'b64d/(.+)' -f
+    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led _pwd -F 'b64e/(.+)' -f | $SCRIPT_DIR/led -r _pwd -E.dec 'b64d/(.+)' -f || exit 1
 fi
 
 if [[ $TEST == 12 || $TEST == all ]]; then
     echo -e "\ntest 12:"
-    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led -v r// fnu// 's//$R $0/'
+    ls $TEST_DIR/files_in/* | $SCRIPT_DIR/led -v r// fnu// 's//$R $0/' || exit 1
 fi
 
 if [[ $TEST == 13 || $TEST == all ]]; then
     echo -e "\ntest 13:"
-    ls $TEST_DIR/files_to_mv/* | $SCRIPT_DIR/led -v she// r// shu// fnc// 's//mv $R $0/' -X
+    ls $TEST_DIR/files_to_mv/* | $SCRIPT_DIR/led -v she// r// shu// fnc// 's//mv $R $0/' -X || exit 1
 fi
 
 echo -e "\nfiles:"
