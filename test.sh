@@ -130,3 +130,5 @@ echo -e "\nfiles:"
 ls -1 $TEST_DIR/files_in/*
 ls -1 $TEST_DIR/files_out/*
 ls -1 $TEST_DIR/files_to_mv/*
+
+echo -e "\ntest SUCCESS"
