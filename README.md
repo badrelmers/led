@@ -7,7 +7,7 @@ It aims to cover in one tool common text search/replace/process transformations 
 
 **CAUTION: this project is in DRAFT mode. All is not implemented yet, nor stable, nor released. Work in progress.**
 
-## Command line syntax
+### Command line syntax
 
 The **led** command line arguments is composed of sections in the folling order:
 
@@ -24,10 +24,23 @@ ls [DIR] | led [SELECTOR] [PROCESSOR] [-opts...] -f
 
 - The options (except -f) can be anywhere before -f one
 - The section recognition (selector, processor) depends on the arguments format and content.
-- STDIN / STDOUT shell pipelines are supported (file content or file names, see Invocation chapter)
-- UTF8 is supported.
 
-### Principle
+### Fatures
+
+- simple search on multiple files like grep
+- advanced block search based on multiple regex boundaries
+- STDIN / STDOUT support for pipes
+- line based processing with linear workflow of up to 16 function steps
+- up to 50 specific text transform functions
+- up to 10 registers for memory store/recall in line processing workflow
+- simple function format, always applyable on a regex with zone capture.
+- transformed lines can be executed (option)
+- UTF-8 full support in content and regex patterns
+- group lines as multi-lines (option)
+- massive files sets handling
+- multiple exit code mode
+
+## Principles
 
 The global Led text processing pipeline is simple:
 - For each input file and each line of file:
@@ -466,7 +479,7 @@ Standard:
 - `1` = no match
 - `2` = internal error
 
-On value (see -e):
+On value (see `-e` option):
 - `0` = output not empty
 - `1` = no match/change
 - `2` = internal error
