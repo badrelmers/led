@@ -1,29 +1,9 @@
 # LED
 
-## Overview
+## OVERVIEW
 
 Line EDitor (led) is a simple command line utility wrote in C to edit text files using the well known PCRE2 library (Philip Hazel) for modern REGEX syntax and more.
 It aims to cover in one tool common text search/replace/process transformations that often need multiple tools combined like sed, grep, tr, awk, perl, xargs ...
-
-**CAUTION: this project is in DRAFT mode. All is not implemented yet, nor stable, nor released. Work in progress.**
-
-### Command line syntax
-
-The **led** command line arguments is composed of sections in the folling order:
-
-```
-# direct invocation
-led [SELECTOR] [PROCESSOR] [-opts...] [-f] [FILES...]
-
-# file content piped invocation
-cat [FILES...] | led [SELECTOR] [PROCESSOR] [-opts...]
-
-# file names piped invocation
-ls [DIR] | led [SELECTOR] [PROCESSOR] [-opts...] -f
-```
-
-- The options (except -f) can be anywhere before -f one
-- The section recognition (selector, processor) depends on the arguments format and content.
 
 ### Fatures
 
@@ -40,7 +20,63 @@ ls [DIR] | led [SELECTOR] [PROCESSOR] [-opts...] -f
 - massive files sets handling
 - multiple exit code mode
 
-## Principles
+### Command line syntax
+
+The **led** command line arguments is composed of sections in the folling order:
+
+```
+# direct invocation
+led [SELECTOR] [PROCESSOR] [-opts...] [-f] [FILES...]
+
+# file content piped invocation
+cat [FILES...] | led [SELECTOR] [PROCESSOR] [-opts...]
+
+# file names piped invocation
+ls [DIR] | led [SELECTOR] [PROCESSOR] [-opts...] -f
+```
+
+- The options (except `-f`) can be everywhere before `-f`
+- after `-f` option all args are considered as file names.
+- The section recognition (selector, processor) depends on the arguments format and content.
+
+### Invocation modes
+
+There is 4 ways to invoque **led**:
+
+* direct mode with files
+* pipe mode with content
+* pipe mode with file names (massive changes)
+* advanced pipe mode with file names (advanced massive changes)
+
+#### Direct mode with file names
+
+`led ... -f <file> <file> ...`
+
+the `-f` option must be the last option, every subsequent argument is considered as an intput file name.
+
+#### Pipe mode with content
+
+`cat <file> | led ...`
+
+this is the default mode when the `-f` option is not given.
+
+#### Pipe mode with file names
+
+`find <dir> | led ... -f`
+
+the last argument is the `-f` option without any files behind. It tells led to read file names from STDIN.
+
+This allows massive changes on multiple files.
+
+#### Advanced pipe mode with file names
+
+`find <dir> | led ... -F -f | led ... -F -f | ...`
+
+See options -F, -W, -A, -E, -D and examples to ouput filenames instead of content.
+
+This allows multiple led invocations on multiple files and file trees.
+
+## PRINCIPLES
 
 The global Led text processing pipeline is simple:
 - For each input file and each line of file:
@@ -152,7 +188,7 @@ The first argment (arg0) is allways a `regex`. It is used to identify a matching
 
 *Depending on the function, in some few cases, the regex can define multiple capture groups or can be not used*.
 
-## Processor functions reference
+## PROCESSOR FUNCTION REFERENCE
 
 ### Substitute function
 
@@ -405,43 +441,7 @@ Copy a register value (or part of the value) to line
 
 `rr/=(\w+)/1` => first catched group of R1 copied to the current line
 
-## Invocation
-
-Ther is 4 ways to invoque **led**:
-* direct mode with files
-* pipe mode with content
-* pipe mode with file names (massive changes)
-* advanced pipe mode with file names (advanced massive changes)
-
-### Direct mode with file names
-
-`led ... -f <file> <file> ...`
-
-the `-f` option must be the last option, every subsequent argument is considered as an intput file name.
-
-### Pipe mode with content
-
-`cat <file> | led ...`
-
-this is the default mode when the `-f` option is not given.
-
-### Pipe mode with file names
-
-`find <dir> | led ... -f`
-
-the last argument is the `-f` option without any files behind. It tells led to read file names from STDIN.
-
-This allows massive changes on multiple files.
-
-### Advanced pipe mode with file names
-
-`find <dir> | led ... -F -f | led ... -F -f | ...`
-
-See options -F, -W, -A, -E, -D and examples to ouput filenames instead of content.
-
-This allows multiple led invocations on multiple files and file trees.
-
-## Options
+## OPTIONS
 
 ### Selector options
 
@@ -472,7 +472,7 @@ following file options write filenames to STDOUT instead of file content. It all
 - `-q` quiet, do not ouptut anything (exit code only)
 - `-e` exit code on value
 
-## Exit code
+## EXIT CODES
 
 Standard:
 - `0` = match/change
@@ -484,7 +484,7 @@ On value (see `-e` option):
 - `1` = no match/change
 - `2` = internal error
 
-## Examples
+## EXAMPLES
 
 ### "grep" like
 
@@ -510,7 +510,14 @@ On value (see `-e` option):
 
 `find /path/to/dir -type f | led she/ r/ shu/ fnc/ 's//mv $R $0' -X`
 
-## Future plans
+## STATUS
 
-- add hash and encryption functions
-- re-write **led** in Rust
+- Documented features (README) are all implemented.
+- Tests coverage is not fully completed (in progress).
+
+## FUTURE PLANS
+
+- Add man pages.
+- Add hash and encryption functions
+- Add negative shift on line selection
+- re-write **led** in Rust !
