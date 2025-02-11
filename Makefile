@@ -16,7 +16,7 @@ APP			= led
 APPTEST 	= $(APP)test
 ARCNAME		= $(APP)_bin.tgz
 LIBS        = -lpcre2-8 -lb64
-VERSION     = 1.0.0
+VERSION     = 1.0.1
 INSTALLDIR  = /usr/local/bin/
 
 ####### Build rules
