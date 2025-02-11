@@ -515,6 +515,8 @@ On value (see `-e` option):
 - Documented features (README) are all implemented.
 - Tests coverage is not fully completed (in progress).
 
+Global current status is unstable.
+
 ## FUTURE PLANS
 
 - Add man pages.
