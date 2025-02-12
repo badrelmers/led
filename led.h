@@ -134,9 +134,14 @@ typedef struct {
     led_str_cpy(&VAR, &SRC)
 
 #define led_str_foreach_char(VAR) \
-    for (struct{size_t i; char c;} foreach = {0, (VAR)->str[0]};\
+    for (struct{size_t i; char c;} foreach = {0, led_str_str(VAR)[0]};\
         foreach.i < led_str_len(VAR);\
-        foreach.i = foreach.n, foreach.c = led_str_uchar_next(VAR, &foreach.n))
+        foreach.c = led_str_str(VAR)[++foreach.i])
+
+#define led_str_foreach_char_zone(VAR, START, STOP) \
+    for (struct{size_t i; char c;} foreach = {START, led_str_str(VAR)[START]};\
+        foreach.i < STOP;\
+        foreach.c = led_str_str(VAR)[++foreach.i])
 
 #define led_str_foreach_uchar(VAR) \
     for (struct{size_t i; size_t n; led_uchar_t c;} foreach = {0, led_uchar_size_str((VAR)->str), led_str_uchar_at(VAR, 0)};\
@@ -197,35 +202,35 @@ inline led_str_t* led_str_clone(led_str_t* lstr, led_str_t* lstr_src) {
 }
 
 inline led_str_t* led_str_cpy(led_str_t* lstr, led_str_t* lstr_src) {
-    for(lstr->len = 0; lstr->len < lstr_src->len && lstr->len + 1 < lstr->size; lstr->len++)
+    for (lstr->len = 0; lstr->len < lstr_src->len && lstr->len + 1 < lstr->size; lstr->len++)
         lstr->str[lstr->len] = lstr_src->str[lstr->len];
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
 
 inline led_str_t* led_str_cpy_str(led_str_t* lstr, const char* str) {
-    for(lstr->len=0; str[lstr->len] && lstr->len+1 < lstr->size; lstr->len++)
+    for (lstr->len=0; str[lstr->len] && lstr->len+1 < lstr->size; lstr->len++)
         lstr->str[lstr->len]=str[lstr->len];
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
 
 inline led_str_t* led_str_app(led_str_t* lstr, led_str_t* lstr_src) {
-    for(size_t i = 0; i<lstr_src->len && lstr->len+1 < lstr->size; i++, lstr->len++)
+    for (size_t i = 0; i<lstr_src->len && lstr->len+1 < lstr->size; i++, lstr->len++)
         lstr->str[lstr->len] = lstr_src->str[i];
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
 
 inline led_str_t* led_str_app_str(led_str_t* lstr, const char* str) {
-    for(size_t i = 0; str[i] && lstr->len+1 < lstr->size; i++, lstr->len++)
+    for (size_t i = 0; str[i] && lstr->len+1 < lstr->size; i++, lstr->len++)
         lstr->str[lstr->len] = str[i];
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
 
 inline led_str_t* led_str_app_zn(led_str_t* lstr, led_str_t* lstr_src, size_t start, size_t stop) {
-    for(size_t i = start; i < stop && lstr_src->str[i] && lstr->len+1 < lstr->size; i++, lstr->len++)
+    for (size_t i = start; i < stop && lstr_src->str[i] && lstr->len+1 < lstr->size; i++, lstr->len++)
         lstr->str[lstr->len] = lstr_src->str[i];
     lstr->str[lstr->len] = '\0';
     return lstr;
@@ -286,8 +291,8 @@ inline led_str_t* led_str_rtrim(led_str_t* lstr) {
 
 inline led_str_t* led_str_ltrim(led_str_t* lstr) {
     size_t i=0,j=0;
-    for(; i < lstr->len && isspace(lstr->str[i]); i++);
-    for(; i < lstr->len; i++,j++)
+    for (; i < lstr->len && isspace(lstr->str[i]); i++);
+    for (; i < lstr->len; i++,j++)
         lstr->str[j] = lstr->str[i];
     lstr->len = j;
     lstr->str[lstr->len] = '\0';
@@ -351,33 +356,25 @@ inline bool led_str_equal_str_at(led_str_t* lstr, const char* str, size_t idx) {
     return strcmp(lstr->str + idx, str) == 0;
 }
 
-inline bool led_str_startswith(led_str_t* lstr1, led_str_t* lstr2) {
-    led_str_foreach_uchar(lstr1) {
-
-    }
-    size_t i = 0;
-    for (; i < lstr1->len && lstr2->str[i] && lstr1->str[i] == lstr2->str[i]; i++);
-    return lstr2->str[i] == '\0';
-}
-
 inline bool led_str_startswith_at(led_str_t* lstr1, led_str_t* lstr2, size_t start) {
-    if ( led_uchar_iscont(lstr1->str[start]) ) return false;
-    size_t i = 0;
-    for (; start < lstr1->len && i < lstr2->len && lstr1->str[start] == lstr2->str[i]; i++, start++);
-    return lstr2->str[i] == '\0';
+    led_str_foreach_char(lstr2) {
+        size_t i = foreach.i + start;
+        if (i >= led_str_len(lstr1) || foreach.c != led_str_str(lstr1)[i]) return false;
+    }
+    return true;
 }
 
-inline bool led_str_startswith_str(led_str_t* lstr, const char* str) {
-    size_t i = 0;
-    for (; i < lstr->len && str[i] && lstr->str[i] == str[i]; i++);
-    return str[i] == '\0';
+inline bool led_str_startswith(led_str_t* lstr1, led_str_t* lstr2) {
+    return led_str_startswith_at(lstr1, lstr2, 0);
 }
 
 inline bool led_str_startswith_str_at(led_str_t* lstr, const char* str, size_t start) {
-    if ( led_uchar_iscont(lstr->str[start]) ) return false;
-    size_t i = 0;
-    for (; start < lstr->len && str[i] && lstr->str[start] == str[i]; i++, start++);
-    return str[i] == '\0';
+    led_str_decl_str(lstr2, str);
+    return led_str_startswith_at(lstr, &lstr2, start);
+}
+
+inline bool led_str_startswith_str(led_str_t* lstr, const char* str) {
+    return led_str_startswith_str_at(lstr, str, 0);
 }
 
 inline size_t led_str_find_uchar_zn(led_str_t* lstr, led_uchar_t c, size_t start, size_t stop) {
@@ -412,7 +409,7 @@ inline bool led_str_ischar(led_str_t* lstr, led_uchar_t c) {
 
 inline size_t led_str_find(led_str_t* lstr1, led_str_t* lstr2) {
     size_t i=0, j=0;
-    for(; i < lstr1->len && lstr2->str[j]; i++)
+    for (; i < lstr1->len && lstr2->str[j]; i++)
         if (lstr1->str[i] == lstr2->str[j]) j++;
         else j = 0;
     return lstr2->str[j] ? lstr1->len: i - j;

@@ -93,6 +93,52 @@ void test_led_str_cut_next() {
     led_assert(led_str_equal_str(&test, "char2àchar3Â"), LED_ERR_INTERNAL, "test_led_str_cut_next");
     led_assert(led_str_equal_str(&tok, "char1"), LED_ERR_INTERNAL, "test_led_str_cut_next");
 }
+
+void test_led_str_startswith() {
+    led_str_decl_str(test1, "â short test");
+    led_str_decl_str(test2, "â short");
+    led_str_decl_str(test3, "â lông");
+    led_str_decl_str(test4, "â short test ");
+    led_debug("smaller");
+    led_assert(led_str_startswith(&test1, &test2), LED_ERR_INTERNAL, "test_led_str_startswith");
+    led_debug("smaller different");
+    led_assert(!led_str_startswith(&test1, &test3), LED_ERR_INTERNAL, "test_led_str_startswith (not)");
+    led_debug("equal");
+    led_assert(led_str_startswith(&test1, &test1), LED_ERR_INTERNAL, "test_led_str_startswith (equal)");
+    led_debug("longer");
+    led_assert(!led_str_startswith(&test1, &test4), LED_ERR_INTERNAL, "test_led_str_startswith (longer)");
+}
+
+void test_led_str_startswith_str() {
+    led_str_decl_str(test1, "â short test");
+    led_debug("smaller");
+    led_assert(led_str_startswith_str(&test1, "â short"), LED_ERR_INTERNAL, "test_led_str_startswith_str");
+    led_debug("smaller different");
+    led_assert(!led_str_startswith_str(&test1, "â lông"), LED_ERR_INTERNAL, "test_led_str_startswith_str (not)");
+    led_debug("equal");
+    led_assert(led_str_startswith_str(&test1, "â short test"), LED_ERR_INTERNAL, "test_led_str_startswith_str (equzl)");
+    led_debug("longer");
+    led_assert(!led_str_startswith_str(&test1, "â short test "), LED_ERR_INTERNAL, "test_led_str_startswith_str (longer)");
+}
+
+
+void test_led_str_find_uchar() {
+    led_str_decl_str(test1, "â short tëst");
+    size_t idx;
+
+    idx = led_str_find_uchar(&test1, 'â');
+    led_debug("present %lu", idx);
+    led_assert(idx == 0, LED_ERR_INTERNAL, "test_led_str_find_uchar");
+
+    idx = led_str_find_uchar(&test1, 'ë');
+    led_debug("present %lu", idx);
+    led_assert(idx == 10, LED_ERR_INTERNAL, "test_led_str_find_uchar");
+
+    idx = led_str_find_uchar(&test1, 'k');
+    led_debug("absent %lu", idx);
+    led_assert(idx == led_str_len(&test1), LED_ERR_INTERNAL, "test_led_str_find_uchar (not)");
+}
+
 //-----------------------------------------------
 // LEDTEST main
 //-----------------------------------------------
@@ -105,5 +151,8 @@ int main(int , char* []) {
     test(test_led_str_foreach_uchar);
     test(test_led_str_foreach_uchar_zone);
     test(test_led_str_cut_next);
+    test(test_led_str_startswith);
+    test(test_led_str_startswith_str);
+    test(test_led_str_find_uchar);
     return 0;
 }
