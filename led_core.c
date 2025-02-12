@@ -297,7 +297,7 @@ void led_init_config() {
         led_debug("led_init_config: configure function=%s id=%d", pfn_desc->long_name, pfunc->id);
 
         led_foreach_char(pfn_desc->args_fmt) {
-            led_assert(foreach.i < LED_FARG_MAX, LED_ERR_ARG, "function arg %i exceed max\n%s", foreach.i, pfn_desc->help_format);
+            led_assert(foreach.i < LED_FARG_MAX, LED_ERR_ARG, "function arg %i exceed max defined %i\n%s", foreach.i, LED_FARG_MAX, pfn_desc->help_format);
             if (foreach.c == 'R') {
                 led_assert(led_str_isinit(&pfunc->arg[foreach.i].lstr), LED_ERR_ARG, "function arg %i: missing regex\n%s", foreach.i+1, pfn_desc->help_format);
                 pfunc->arg[foreach.i].regex = led_str_regex_compile(&pfunc->arg[foreach.i].lstr);
