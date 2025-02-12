@@ -51,7 +51,7 @@ void led_free() {
         pcre2_code_free(led.sel.regex_stop);
         led.sel.regex_stop = NULL;
     }
-    for(size_t i = 0; i < led.func_count; i++) {
+    for (size_t i = 0; i < led.func_count; i++) {
         led_fn_t* pfunc = &led.func_list[i];
         if (pfunc->regex != NULL) {
             if (pfunc->regex != LED_REGEX_ALL_LINE) // will be deleted in a dedicated function.

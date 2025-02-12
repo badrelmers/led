@@ -104,13 +104,13 @@ led_str_t* led_str_cut_next(led_str_t* lstr, led_uchar_t uchar, led_str_t* stok)
     led_str_clone(stok, lstr);
     led_str_foreach_uchar(lstr) {
         // led_debug("led_str_cut_next - i=%u c=%x l=%u", i, c, l);
-        if ( foreach.c == uchar ) {
+        if ( foreach.uc == uchar ) {
             stok->str[foreach.i] = '\0';
             stok->len = foreach.i;
-            stok->size = foreach.n;
-            lstr->str += foreach.n;
-            lstr->len -= foreach.n;
-            lstr->size -= foreach.n;
+            stok->size = foreach.in;
+            lstr->str += foreach.in;
+            lstr->len -= foreach.in;
+            lstr->size -= foreach.in;
             // led_debug("led_str_cut_next - lstr=%s tok=%s", lstr->str, stok->str);
             return lstr;
         }

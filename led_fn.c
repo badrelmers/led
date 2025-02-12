@@ -375,21 +375,19 @@ void led_fn_impl_quote_double(led_fn_t* pfunc) { led_fn_impl_quote_base(pfunc, '
 void led_fn_impl_quote_back(led_fn_t* pfunc) { led_fn_impl_quote_base(pfunc, '`'); }
 
 void led_fn_impl_quote_remove(led_fn_t* pfunc) {
-    const char* QUOTES = "'\"`";
+    const char QUOTES[] = "'\"`";
     led_zone_pre_process(pfunc);
 
-    char q = QUOTES[0];
-    for (size_t i = 0; q != '\0'; i++, q = QUOTES[i]) {
-        if (led_str_uchar_at(&led.line_prep.lstr, led.line_prep.zone_start) == (led_uchar_t)q
-            && led_str_uchar_at(&led.line_prep.lstr, led.line_prep.zone_stop - 1) == (led_uchar_t)q
-            )
+    bool found = false;
+    led_foreach_char(QUOTES)
+        if (led_str_uchar_at(&led.line_prep.lstr, led.line_prep.zone_start) == (led_uchar_t)foreach.c
+            && led_str_uchar_at(&led.line_prep.lstr, led.line_prep.zone_stop - 1) == (led_uchar_t)foreach.c) {
+            found = true;
+            led_debug("led_fn_impl_quote_remove: quote found %c", foreach.c);
             break;
-    }
-
-    if (q) {
-        led_debug("led_fn_impl_quote_remove: quotes found: %c", q);
+        }
+    if (found)
         led_str_app_zn(&led.line_write.lstr, &led.line_prep.lstr, led.line_prep.zone_start + 1, led.line_prep.zone_stop - 1);
-    }
     else
         led_line_append_zone(&led.line_write, &led.line_prep);
 
@@ -536,10 +534,10 @@ void led_fn_impl_shell_unescape(led_fn_t* pfunc) {
 
     bool prev_is_esc = false;
     led_str_foreach_uchar_zone(&led.line_prep.lstr, led.line_prep.zone_start, led.line_prep.zone_stop) {
-        if (!prev_is_esc && foreach.c == '\\')
+        if (!prev_is_esc && foreach.uc == '\\')
             prev_is_esc = true;
         else
-            led_str_app_uchar(&led.line_write.lstr, foreach.c);
+            led_str_app_uchar(&led.line_write.lstr, foreach.uc);
     }
     led_zone_post_process();
 }
@@ -631,7 +629,7 @@ void led_fn_impl_field_mixed(led_fn_t* pfunc) { led_fn_impl_field_base(pfunc, ",
 
 void led_fn_impl_join(led_fn_t*) {
     led_str_foreach_uchar(&led.line_prep.lstr) {
-        if (foreach.c != '\n') led_str_app_uchar(&led.line_write.lstr, foreach.c);
+        if (foreach.uc != '\n') led_str_app_uchar(&led.line_write.lstr, foreach.uc);
     }
 }
 
@@ -642,8 +640,8 @@ void led_fn_impl_split_base(led_fn_t* pfunc, const char* field_sep) {
     led_zone_pre_process(pfunc);
 
     led_str_foreach_uchar_zone(&led.line_prep.lstr, led.line_prep.zone_start, led_str_len(&led.line_prep.lstr)) {
-        if ( led_str_ischar(&sepsval, foreach.c) ) foreach.c = '\n';
-        led_str_app_uchar(&led.line_write.lstr, foreach.c);
+        if ( led_str_ischar(&sepsval, foreach.uc) ) foreach.uc = '\n';
+        led_str_app_uchar(&led.line_write.lstr, foreach.uc);
     }
     led_zone_post_process();
 }

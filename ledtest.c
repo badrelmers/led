@@ -58,8 +58,8 @@ void test_led_str_foreach_uchar() {
     led_debug("%s", test.str);
     led_str_foreach_uchar(&test) {
         led_str_decl(schar, 5);
-        led_str_app_uchar(&schar, foreach.c);
-        led_debug("%d %d %s",foreach.i, foreach.n, led_str_str(&schar));
+        led_str_app_uchar(&schar, foreach.uc);
+        led_debug("%d %d %s",foreach.i, foreach.in, led_str_str(&schar));
     }
     //led_assert(led_str_equal_str(&test, "test="), LED_ERR_INTERNAL, "test_led_str_foreach_uchar");
 }
@@ -70,8 +70,8 @@ void test_led_str_foreach_uchar_zone() {
     led_debug("%s", test.str);
     led_str_foreach_uchar_zone(&test,3,6) {
         led_str_decl(schar, 5);
-        led_str_app_uchar(&schar, foreach.c);
-        led_debug("%d %d %s",foreach.i, foreach.n, led_str_str(&schar));
+        led_str_app_uchar(&schar, foreach.uc);
+        led_debug("%d %d %s",foreach.i, foreach.in, led_str_str(&schar));
     }
     //led_assert(led_str_equal_str(&test, "test="), LED_ERR_INTERNAL, "test_led_str_foreach_uchar_zone");
 }

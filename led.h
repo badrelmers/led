@@ -106,7 +106,7 @@ uint32_t led_uchar_decode(led_uchar_t c);
 //------------------------------------------------------------------------------
 // Led poor & simple string management without any memory allocation.
 // Led strings only wraps buffers declared statically or in the stack
-// to offer various management functions easyer.
+// to make utf-8 string management easyer.
 //------------------------------------------------------------------------------
 
 typedef struct {
@@ -134,25 +134,24 @@ typedef struct {
     led_str_init(&VAR,VAR##_buf,SRC.len); \
     led_str_cpy(&VAR, &SRC)
 
-#define led_str_foreach_char(VAR) \
-    for (struct{size_t i; char c;} foreach = {0, led_str_str(VAR)[0]};\
-        foreach.i < led_str_len(VAR);\
-        foreach.c = led_str_str(VAR)[++foreach.i])
+#define led_foreach_char(STR) \
+    for (struct{size_t i; char c;} foreach = {0, (STR)[0]};\
+        foreach.c;\
+        foreach.c = (STR)[++foreach.i])
 
 #define led_str_foreach_char_zone(VAR, START, STOP) \
     for (struct{size_t i; char c;} foreach = {START, led_str_str(VAR)[START]};\
         foreach.i < STOP;\
         foreach.c = led_str_str(VAR)[++foreach.i])
 
-#define led_str_foreach_uchar(VAR) \
-    for (struct{size_t i; size_t n; led_uchar_t c;} foreach = {0, led_uchar_size_str((VAR)->str), led_str_uchar_at(VAR, 0)};\
-        foreach.i < led_str_len(VAR);\
-        foreach.i = foreach.n, foreach.c = led_str_uchar_next(VAR, &foreach.n))
+#define led_str_foreach_char(VAR) led_str_foreach_char_zone(VAR, 0, led_str_len(VAR))
 
 #define led_str_foreach_uchar_zone(VAR, START, STOP) \
-    for (struct{size_t i; size_t n; led_uchar_t c;} foreach = {START, START + led_uchar_size_str((VAR)->str + START), led_str_uchar_at(VAR, START)};\
+    for (struct{size_t i; size_t in; led_uchar_t uc;} foreach = {START, START + led_uchar_size_str((VAR)->str + START), led_str_uchar_at(VAR, START)};\
         foreach.i < STOP;\
-        foreach.i = foreach.n, foreach.c = led_str_uchar_next(VAR, &foreach.n))
+        foreach.i = foreach.in, foreach.uc = led_str_uchar_next(VAR, &foreach.in))
+
+#define led_str_foreach_uchar(VAR) led_str_foreach_uchar_zone(VAR, 0, led_str_len(VAR))
 
 inline size_t led_str_len(led_str_t* lstr) {
     return lstr->len;
@@ -234,6 +233,7 @@ inline led_str_t* led_str_app_zn(led_str_t* lstr, led_str_t* lstr_src, size_t st
     for (size_t i = start; i < stop && lstr_src->str[i] && lstr->len+1 < lstr->size; i++, lstr->len++)
         lstr->str[lstr->len] = lstr_src->str[i];
     lstr->str[lstr->len] = '\0';
+    //led_debug("led_str_app_zn:  %s ==(%lu,%lu)==> %s", lstr_src->str, start, stop, lstr->str);
     return lstr;
 }
 
