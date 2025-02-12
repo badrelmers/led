@@ -296,60 +296,60 @@ void led_init_config() {
         led_fn_desc_t* pfn_desc = led_fn_table_descriptor(pfunc->id);
         led_debug("led_init_config: configure function=%s id=%d", pfn_desc->long_name, pfunc->id);
 
-        const char* format = pfn_desc->args_fmt;
-        for (size_t i=0; format[i] && i < LED_FARG_MAX; i++) {
-            if (format[i] == 'R') {
-                led_assert(led_str_isinit(&pfunc->arg[i].lstr), LED_ERR_ARG, "function arg %i: missing regex\n%s", i+1, pfn_desc->help_format);
-                pfunc->arg[i].regex = led_str_regex_compile(&pfunc->arg[i].lstr);
-                led_debug("led_init_config: function arg=%i regex found", i+1);
+        led_foreach_char(pfn_desc->args_fmt) {
+            led_assert(foreach.i < LED_FARG_MAX, LED_ERR_ARG, "function arg %i exceed max\n%s", foreach.i, pfn_desc->help_format);
+            if (foreach.c == 'R') {
+                led_assert(led_str_isinit(&pfunc->arg[foreach.i].lstr), LED_ERR_ARG, "function arg %i: missing regex\n%s", foreach.i+1, pfn_desc->help_format);
+                pfunc->arg[foreach.i].regex = led_str_regex_compile(&pfunc->arg[foreach.i].lstr);
+                led_debug("led_init_config: function arg=%i regex found", foreach.i+1);
             }
-            else if (format[i] == 'r') {
-                if (led_str_isinit(&pfunc->arg[i].lstr)) {
-                    pfunc->arg[i].regex = led_str_regex_compile(&pfunc->arg[i].lstr);
-                    led_debug("led_init_config: function arg=%i regex found", i+1);
+            else if (foreach.c == 'r') {
+                if (led_str_isinit(&pfunc->arg[foreach.i].lstr)) {
+                    pfunc->arg[foreach.i].regex = led_str_regex_compile(&pfunc->arg[foreach.i].lstr);
+                    led_debug("led_init_config: function arg=%i regex found", foreach.i+1);
                 }
             }
-            else if (format[i] == 'N') {
-                led_assert(led_str_isinit(&pfunc->arg[i].lstr), LED_ERR_ARG, "function arg %i: missing number\n%s", i+1, pfn_desc->help_format);
-                pfunc->arg[i].val = atol(led_str_str(&pfunc->arg[i].lstr));
-                led_debug("led_init_config: function arg=%i numeric found=%li", i+1, pfunc->arg[i].val);
+            else if (foreach.c == 'N') {
+                led_assert(led_str_isinit(&pfunc->arg[foreach.i].lstr), LED_ERR_ARG, "function arg %i: missing number\n%s", foreach.i+1, pfn_desc->help_format);
+                pfunc->arg[foreach.i].val = atol(led_str_str(&pfunc->arg[foreach.i].lstr));
+                led_debug("led_init_config: function arg=%i numeric found=%li", foreach.i+1, pfunc->arg[foreach.i].val);
                 // additionally compute the positive unsigned value to help
-                pfunc->arg[i].uval = pfunc->arg[i].val < 0 ? (size_t)(-pfunc->arg[i].val) : (size_t)pfunc->arg[i].val;
+                pfunc->arg[foreach.i].uval = pfunc->arg[foreach.i].val < 0 ? (size_t)(-pfunc->arg[foreach.i].val) : (size_t)pfunc->arg[foreach.i].val;
             }
-            else if (format[i] == 'n') {
-                if (led_str_isinit(&pfunc->arg[i].lstr)) {
-                    pfunc->arg[i].val = atol(led_str_str(&pfunc->arg[i].lstr));
-                    led_debug("led_init_config: function arg=%i: numeric found=%li", i+1, pfunc->arg[i].val);
+            else if (foreach.c == 'n') {
+                if (led_str_isinit(&pfunc->arg[foreach.i].lstr)) {
+                    pfunc->arg[foreach.i].val = atol(led_str_str(&pfunc->arg[foreach.i].lstr));
+                    led_debug("led_init_config: function arg=%i: numeric found=%li", foreach.i+1, pfunc->arg[foreach.i].val);
                     // additionally compute the positive unsigned value to help
-                    pfunc->arg[i].uval = pfunc->arg[i].val < 0 ? (size_t)(-pfunc->arg[i].val) : (size_t)pfunc->arg[i].val;
+                    pfunc->arg[foreach.i].uval = pfunc->arg[foreach.i].val < 0 ? (size_t)(-pfunc->arg[foreach.i].val) : (size_t)pfunc->arg[foreach.i].val;
                 }
             }
-            else if (format[i] == 'P') {
-                led_assert(led_str_isinit(&pfunc->arg[i].lstr), LED_ERR_ARG, "function arg %i: missing number\n%s", i+1, pfn_desc->help_format);
-                pfunc->arg[i].val = atol(led_str_str(&pfunc->arg[i].lstr));
-                led_assert(pfunc->arg[i].val >= 0, LED_ERR_ARG, "function arg %i: not a positive number\n%s", i+1, pfn_desc->help_format);
-                pfunc->arg[i].uval = (size_t)pfunc->arg[i].val;
-                led_debug("led_init_config: function arg=%i positive numeric found=%lu", i+1, pfunc->arg[i].uval);
+            else if (foreach.c == 'P') {
+                led_assert(led_str_isinit(&pfunc->arg[foreach.i].lstr), LED_ERR_ARG, "function arg %i: missing number\n%s", foreach.i+1, pfn_desc->help_format);
+                pfunc->arg[foreach.i].val = atol(led_str_str(&pfunc->arg[foreach.i].lstr));
+                led_assert(pfunc->arg[foreach.i].val >= 0, LED_ERR_ARG, "function arg %i: not a positive number\n%s", foreach.i+1, pfn_desc->help_format);
+                pfunc->arg[foreach.i].uval = (size_t)pfunc->arg[foreach.i].val;
+                led_debug("led_init_config: function arg=%i positive numeric found=%lu", foreach.i+1, pfunc->arg[foreach.i].uval);
             }
-            else if (format[i] == 'p') {
-                if (led_str_isinit(&pfunc->arg[i].lstr)) {
-                    pfunc->arg[i].val = atol(led_str_str(&pfunc->arg[i].lstr));
-                    led_assert(pfunc->arg[i].val >= 0, LED_ERR_ARG, "function arg %i: not a positive number\n%s", i+1, pfn_desc->help_format);
-                    pfunc->arg[i].uval = (size_t)pfunc->arg[i].val;
-                    led_debug("led_init_config: function arg=%i positive numeric found=%lu", i+1, pfunc->arg[i].uval);
+            else if (foreach.c == 'p') {
+                if (led_str_isinit(&pfunc->arg[foreach.i].lstr)) {
+                    pfunc->arg[foreach.i].val = atol(led_str_str(&pfunc->arg[foreach.i].lstr));
+                    led_assert(pfunc->arg[foreach.i].val >= 0, LED_ERR_ARG, "function arg %i: not a positive number\n%s", foreach.i+1, pfn_desc->help_format);
+                    pfunc->arg[foreach.i].uval = (size_t)pfunc->arg[foreach.i].val;
+                    led_debug("led_init_config: function arg=%i positive numeric found=%lu", foreach.i+1, pfunc->arg[foreach.i].uval);
                 }
             }
-            else if (format[i] == 'S') {
-                led_assert(led_str_isinit(&pfunc->arg[i].lstr), LED_ERR_ARG, "function arg %i: missing string\n%s", i+1, pfn_desc->help_format);
-                led_debug("led_init_config: function arg=%i string found=%s", i+1, led_str_str(&pfunc->arg[i].lstr));
+            else if (foreach.c == 'S') {
+                led_assert(led_str_isinit(&pfunc->arg[foreach.i].lstr), LED_ERR_ARG, "function arg %i: missing string\n%s", foreach.i+1, pfn_desc->help_format);
+                led_debug("led_init_config: function arg=%i string found=%s", foreach.i+1, led_str_str(&pfunc->arg[foreach.i].lstr));
             }
-            else if (format[i] == 's') {
-                if (led_str_isinit(&pfunc->arg[i].lstr)) {
-                    led_debug("led_init_config: function arg=%i string found=%s", i+1, led_str_str(&pfunc->arg[i].lstr));
+            else if (foreach.c == 's') {
+                if (led_str_isinit(&pfunc->arg[foreach.i].lstr)) {
+                    led_debug("led_init_config: function arg=%i string found=%s", foreach.i+1, led_str_str(&pfunc->arg[foreach.i].lstr));
                 }
             }
             else {
-                led_assert(true, LED_ERR_ARG, "function arg %i: bad internal format (%s)", i+1, format);
+                led_assert(true, LED_ERR_ARG, "function arg %i: bad internal format (%s)", foreach.i+1, pfn_desc->args_fmt);
             }
         }
     }
