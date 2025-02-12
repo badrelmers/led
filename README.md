@@ -340,7 +340,7 @@ revert the char order of the line
 
 `urle|url_encode/[regex]`
 
-### Shel escape functions
+### Shell escaping functions
 
  Escape chars for shell executions.
 
