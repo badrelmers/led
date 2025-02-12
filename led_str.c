@@ -102,7 +102,7 @@ bool led_str_match_offset(led_str_t* lstr, pcre2_code* regex, size_t* pzone_star
 
 led_str_t* led_str_cut_next(led_str_t* lstr, led_uchar_t uchar, led_str_t* stok) {
     led_str_clone(stok, lstr);
-    led_str_foreach_char(lstr) {
+    led_str_foreach_uchar(lstr) {
         // led_debug("led_str_cut_next - i=%u c=%x l=%u", i, c, l);
         if ( foreach.c == uchar ) {
             stok->str[foreach.i] = '\0';

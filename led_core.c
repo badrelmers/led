@@ -111,7 +111,7 @@ bool led_init_opt(led_str_t* arg) {
         led_debug("led_init_opt: arg option=%s", led_str_str(arg));
         size_t opti = 1;
         while(opti < arg->len) {
-            led_uchar_t opt = led_str_char_next(arg, &opti);
+            led_uchar_t opt = led_str_uchar_next(arg, &opti);
             char* optstr = led_str_str_at(arg, opti);
             led_debug("led_init_opt: option=%c sitcked=%s", opt, optstr);
             switch (opt) {
@@ -640,7 +640,7 @@ bool led_process_read() {
     if (!led_line_isinit(&led.line_read)) {
         led_str_init(&led.line_read.lstr, fgets(led.line_read.buf, sizeof led.line_read.buf, led.file_in.file), sizeof led.line_read.buf);
         if (led_line_isinit(&led.line_read)) {
-            led_str_trunk_char(&led.line_read.lstr, '\n');
+            led_str_trunk_uchar(&led.line_read.lstr, '\n');
             led.line_read.zone_start = 0;
             led.line_read.zone_stop = led.line_read.lstr.len;
             led.line_read.selected = false;
@@ -658,7 +658,7 @@ void led_process_write() {
     led_debug("led_process_write: ");
     if (led_line_isinit(&led.line_write)) {
         led_debug("led_process_write: write line num=%d len=%d", led.sel.total_count, led_str_len(&led.line_write.lstr));
-        led_str_app_char(&led.line_write.lstr, '\n');
+        led_str_app_uchar(&led.line_write.lstr, '\n');
         led_debug("led_process_write: write line to file=%s", led_str_str(&led.file_out.name));
         fwrite(led_str_str(&led.line_write.lstr), sizeof *led_str_str(&led.line_write.lstr), led_str_len(&led.line_write.lstr), led.file_out.file);
         fflush(led.file_out.file);
@@ -721,7 +721,7 @@ bool led_process_selector() {
             led_debug("led_process_selector: pack: append to ready");
             if (!(led.opt.filter_blank && led_str_isblank(&led.line_read.lstr))) {
                 if (led_str_iscontent(&led.line_prep.lstr))
-                    led_str_app_char(&led.line_prep.lstr, '\n');
+                    led_str_app_uchar(&led.line_prep.lstr, '\n');
                 led_str_app(&led.line_prep.lstr, &led.line_read.lstr);
             }
             led_line_select(&led.line_prep, true);

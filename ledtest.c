@@ -25,55 +25,55 @@
 void test_led_str_app() {
     led_str_decl(test, 16);
     led_str_app_str(&test,"a test");
-    led_str_app_char(&test, 'A');
-    led_str_app_char(&test, 'â');
+    led_str_app_uchar(&test, 'A');
+    led_str_app_uchar(&test, 'â');
     led_debug("%s",led_str_str(&test));
-    led_assert(led_str_equal_str(&test, "a testAâ"), LED_ERR_INTERNAL, "led_test_char_app");
+    led_assert(led_str_equal_str(&test, "a testAâ"), LED_ERR_INTERNAL, "test_led_str_app");
 }
 
-void test_led_str_char_last() {
+void test_led_str_uchar_last() {
     led_str_decl(test, 16);
     led_str_app_str(&test,"test=à");
-    led_uchar_t c = led_str_char_last(&test);
-    led_str_app_char(&test, c);
+    led_uchar_t c = led_str_uchar_last(&test);
+    led_str_app_uchar(&test, c);
     led_debug("%s",led_str_str(&test));
-    led_assert(led_str_equal_str(&test, "test=àà"), LED_ERR_INTERNAL, "led_test_char_last");
+    led_assert(led_str_equal_str(&test, "test=àà"), LED_ERR_INTERNAL, "test_led_str_uchar_last");
 }
 
-void test_led_str_trunk_char() {
+void test_led_str_trunk_uchar() {
     led_str_decl(test, 16);
     led_str_app_str(&test,"test=àa");
-    led_str_trunk_char(&test, 'à');
+    led_str_trunk_uchar(&test, 'à');
     led_debug("%s",led_str_str(&test));
-    led_str_trunk_char(&test, 'a');
+    led_str_trunk_uchar(&test, 'a');
     led_debug("%s",led_str_str(&test));
-    led_str_trunk_char(&test, 'à');
+    led_str_trunk_uchar(&test, 'à');
     led_debug("%s",led_str_str(&test));
-    led_assert(led_str_equal_str(&test, "test="), LED_ERR_INTERNAL, "led_test_trunk_char");
+    led_assert(led_str_equal_str(&test, "test="), LED_ERR_INTERNAL, "test_led_str_trunk_uchar");
 }
 
-void test_led_str_foreach_char() {
+void test_led_str_foreach_uchar() {
     led_str_decl(test, 16);
     led_str_app_str(&test,"ÂBCDÊF");
     led_debug("%s", test.str);
-    led_str_foreach_char(&test) {
+    led_str_foreach_uchar(&test) {
         led_str_decl(schar, 5);
-        led_str_app_char(&schar, foreach.c);
+        led_str_app_uchar(&schar, foreach.c);
         led_debug("%d %d %s",foreach.i, foreach.n, led_str_str(&schar));
     }
-    //led_assert(led_str_equal_str(&test, "test="), LED_ERR_INTERNAL, "led_test_trunk_char");
+    //led_assert(led_str_equal_str(&test, "test="), LED_ERR_INTERNAL, "test_led_str_foreach_uchar");
 }
 
-void test_led_str_foreach_char_zone() {
+void test_led_str_foreach_uchar_zone() {
     led_str_decl(test, 16);
     led_str_app_str(&test,"ÂBCDÊF");
     led_debug("%s", test.str);
-    led_str_foreach_char_zone(&test,3,6) {
+    led_str_foreach_uchar_zone(&test,3,6) {
         led_str_decl(schar, 5);
-        led_str_app_char(&schar, foreach.c);
+        led_str_app_uchar(&schar, foreach.c);
         led_debug("%d %d %s",foreach.i, foreach.n, led_str_str(&schar));
     }
-    //led_assert(led_str_equal_str(&test, "test="), LED_ERR_INTERNAL, "led_test_trunk_char");
+    //led_assert(led_str_equal_str(&test, "test="), LED_ERR_INTERNAL, "test_led_str_foreach_uchar_zone");
 }
 
 void test_led_str_cut_next() {
@@ -84,14 +84,14 @@ void test_led_str_cut_next() {
     led_debug("%s",led_str_str(&test));
     led_str_cut_next(&test, '/', &tok);
     led_debug("%s -> tok=%s",led_str_str(&test), led_str_str(&tok));
-    led_assert(led_str_equal_str(&test, "charà/charÂ"), LED_ERR_INTERNAL, "led_test_cut_next");
-    led_assert(led_str_equal_str(&tok, "chara"), LED_ERR_INTERNAL, "led_test_cut_next");
+    led_assert(led_str_equal_str(&test, "charà/charÂ"), LED_ERR_INTERNAL, "test_led_str_cut_next");
+    led_assert(led_str_equal_str(&tok, "chara"), LED_ERR_INTERNAL, "test_led_str_cut_next");
 
     led_str_cpy_str(&test, "char1àchar2àchar3Â");
     led_str_cut_next(&test, 'à', &tok);
     led_debug("%s -> tok=%s",led_str_str(&test), led_str_str(&tok));
-    led_assert(led_str_equal_str(&test, "char2àchar3Â"), LED_ERR_INTERNAL, "led_test_cut_next");
-    led_assert(led_str_equal_str(&tok, "char1"), LED_ERR_INTERNAL, "led_test_cut_next");
+    led_assert(led_str_equal_str(&test, "char2àchar3Â"), LED_ERR_INTERNAL, "test_led_str_cut_next");
+    led_assert(led_str_equal_str(&tok, "char1"), LED_ERR_INTERNAL, "test_led_str_cut_next");
 }
 //-----------------------------------------------
 // LEDTEST main
@@ -100,10 +100,10 @@ void test_led_str_cut_next() {
 int main(int , char* []) {
     led.opt.verbose = true;
     test(test_led_str_app);
-    test(test_led_str_char_last);
-    test(test_led_str_trunk_char);
-    test(test_led_str_foreach_char);
-    test(test_led_str_foreach_char_zone);
+    test(test_led_str_uchar_last);
+    test(test_led_str_trunk_uchar);
+    test(test_led_str_foreach_uchar);
+    test(test_led_str_foreach_uchar_zone);
     test(test_led_str_cut_next);
     return 0;
 }
