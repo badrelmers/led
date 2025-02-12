@@ -48,8 +48,6 @@ void led_debug(const char* message, ...);
 
 //------------------------------------------------------------------------------
 // LED UTF8 support
-// thanks to clear explanations from
-// https://dev.to/rdentato/utf-8-strings-in-c-2-3-3kp1
 //------------------------------------------------------------------------------
 
 typedef uint32_t led_uchar_t;
@@ -93,14 +91,17 @@ inline led_uchar_t led_uchar_toupper(led_uchar_t c) {
     return c;
 }
 
-// bool led_uchar_isvalid(led_uchar_t c);
-// led_uchar_t led_uchar_encode(uint32_t code);
-// uint32_t led_uchar_decode(led_uchar_t c);
-
 size_t led_uchar_from_str(char* str, led_uchar_t* uchar);
 size_t led_uchar_from_rstr(char* str, size_t len, led_uchar_t* uchar);
 size_t led_uchar_to_str(char* str, led_uchar_t uchar);
 
+/* codepoints UFT-8 functions are not necessary but we let it if needed.
+
+bool led_uchar_isvalid(led_uchar_t c);
+led_uchar_t led_uchar_encode(uint32_t code);
+uint32_t led_uchar_decode(led_uchar_t c);
+
+*/
 
 //------------------------------------------------------------------------------
 // Led poor & simple string management without any memory allocation.
