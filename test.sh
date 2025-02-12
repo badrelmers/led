@@ -62,10 +62,6 @@ touch $TEST_DIR/files_to_mv/file2\ to\'\ mv.txt
 
 echo -e "\ntest = $TEST"
 
-
-echo -e "\nunit tests:"
-$SCRIPT_DIR/ledtest || exit 1
-
 if [[ $TEST == 1 || $TEST == all ]]; then
     echo -e "\ntest 1:"
     cat $TEST_DIR/files_in/file_0 | $SCRIPT_DIR/led -v AA || exit 1

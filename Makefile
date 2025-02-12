@@ -49,11 +49,13 @@ distclean: clean
 
 ####### Test
 
-.PHONY: test
-test: $(APP) $(APPTEST)
+utest: $(APPTEST)
+	./ledtest
+
+test: $(APP) utest
 	./test.sh
 
-####### Install an packaging
+####### Install and package
 
 install: $(APP)
 	sudo mkdir -p $(INSTALLDIR)
