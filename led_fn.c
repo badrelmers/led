@@ -104,24 +104,25 @@ void led_fn_helper_substitute(led_fn_t* pfunc, led_str_t* sinput, led_str_t* sou
     led_str_decl(sreplace, LED_BUF_MAX);
     led_debug("led_fn_helper_substitute: Replace registers in substitute string (len=%d) %s", led_str_len(&pfunc->arg[0].lstr), led_str_str(&pfunc->arg[0].lstr));
 
-    size_t i = 0;
-    while ( i < led_str_len(&pfunc->arg[0].lstr) ) {
+    led_str_foreach_uchar(&pfunc->arg[0].lstr) {
         if (led_str_isfull(&sreplace)) break;
-        if (led_str_startswith_str_at(&pfunc->arg[0].lstr, "$R", i)) {
+
+        if (foreach.uc == '$' && led_str_uchar_at(&pfunc->arg[0].lstr, foreach.in) == 'R') {
             size_t ir = 0;
-            size_t in = i+2; // position of of register ID if given.
-            if ( in < led_str_len(&pfunc->arg[0].lstr) && led_uchar_isdigit(led_str_uchar_at(&pfunc->arg[0].lstr, in)) ) {
-                ir = led_str_uchar_at(&pfunc->arg[0].lstr, in++) - '0';
+            // set next position after "$R".
+            foreach.in++;
+            // check for the register ID if given.
+            if ( foreach.in < led_str_len(&pfunc->arg[0].lstr) && led_uchar_isdigit(led_str_uchar_at(&pfunc->arg[0].lstr, foreach.in)) ) {
+                // get register ID and increment next position.
+                ir = led_str_uchar_at(&pfunc->arg[0].lstr, foreach.in++) - '0';
             }
-            led_debug("led_fn_helper_substitute: Replace register %d found at %d", ir, i);
+            led_debug("led_fn_helper_substitute: Replace register %lu found at %lu next chars at %lu", ir, foreach.i, foreach.in) ;
             led_str_foreach_uchar(&led.line_reg[ir].lstr)
                 led_str_app_uchar(&sreplace, foreach.uc);
-            i = in; // position "i" at end of register mark
         }
         else {
-            led_uchar_t c = led_str_uchar_next(&pfunc->arg[0].lstr, &i);
             // led_debug("led_fn_helper_substitute: append to sreplace %c", c);
-            led_str_app_uchar(&sreplace, c);
+            led_str_app_uchar(&sreplace, foreach.uc);
         }
     }
 
@@ -283,11 +284,8 @@ void led_fn_impl_translate(led_fn_t* pfunc) {
 void led_fn_impl_case_lower(led_fn_t* pfunc) {
     led_zone_pre_process(pfunc);
 
-    size_t i = led.line_prep.zone_start;
-    while ( i < led.line_prep.zone_stop ) {
-        led_uchar_t c = led_str_uchar_next(&led.line_prep.lstr, &i);
-        led_str_app_uchar(&led.line_write.lstr, led_uchar_tolower(c));
-    }
+    led_str_foreach_uchar_zone(&led.line_prep.lstr, led.line_prep.zone_start, led.line_prep.zone_stop)
+        led_str_app_uchar(&led.line_write.lstr, led_uchar_tolower(foreach.uc));
 
     led_zone_post_process();
 }
@@ -295,23 +293,19 @@ void led_fn_impl_case_lower(led_fn_t* pfunc) {
 void led_fn_impl_case_upper(led_fn_t* pfunc) {
     led_zone_pre_process(pfunc);
 
-    size_t i = led.line_prep.zone_start;
-    while ( i < led.line_prep.zone_stop ) {
-        led_uchar_t c = led_str_uchar_next(&led.line_prep.lstr, &i);
-        led_str_app_uchar(&led.line_write.lstr, led_uchar_toupper(c));
-    }
+    led_str_foreach_uchar_zone(&led.line_prep.lstr, led.line_prep.zone_start, led.line_prep.zone_stop)
+        led_str_app_uchar(&led.line_write.lstr, led_uchar_toupper(foreach.uc));
 
     led_zone_post_process();
 }
 
 void led_fn_impl_case_first(led_fn_t* pfunc) {
     led_zone_pre_process(pfunc);
-    size_t i = led.line_prep.zone_start;
-    led_str_app_uchar(&led.line_write.lstr, led_uchar_toupper(led_str_uchar_next(&led.line_prep.lstr, &i)));
-    while ( i < led.line_prep.zone_stop ) {
-        led_uchar_t c = led_str_uchar_next(&led.line_prep.lstr, &i);
-        led_str_app_uchar(&led.line_write.lstr, led_uchar_tolower(c));
-    }
+
+    led_str_app_uchar(&led.line_write.lstr, led_uchar_toupper(led_str_uchar_next(&led.line_prep.lstr, &led.line_prep.zone_start)));
+
+    led_str_foreach_uchar_zone(&led.line_prep.lstr, led.line_prep.zone_start, led.line_prep.zone_stop)
+        led_str_app_uchar(&led.line_write.lstr, led_uchar_tolower(foreach.uc));
 
     led_zone_post_process();
 }

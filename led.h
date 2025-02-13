@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>
+#include <locale.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>

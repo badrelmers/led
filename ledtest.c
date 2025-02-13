@@ -144,7 +144,9 @@ void test_led_str_find_uchar() {
 //-----------------------------------------------
 
 int main(int , char* []) {
+    setlocale(LC_ALL, "");
     led.opt.verbose = true;
+
     test(test_led_str_app);
     test(test_led_str_uchar_last);
     test(test_led_str_trunk_uchar);

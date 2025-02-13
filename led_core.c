@@ -109,94 +109,95 @@ bool led_init_opt(led_str_t* arg) {
     bool rc = led_str_match_pat(arg, "^-[a-zA-Z]+");
     if (rc) {
         led_debug("led_init_opt: arg option=%s", led_str_str(arg));
-        size_t opti = 1;
-        while (opti < arg->len) {
-            led_uchar_t opt = led_str_uchar_next(arg, &opti);
-            char* optstr = led_str_str_at(arg, opti);
-            led_debug("led_init_opt: option=%c sitcked=%s", opt, optstr);
-            switch (opt) {
-            case 'h':
-                led.opt.help = true;
-                break;
-            case 'v':
-                led.opt.verbose = true;
-                break;
-            case 'q':
-                led.opt.quiet = true;
-                break;
-            case 'r':
-                led.opt.report = true;
-                break;
-            case 'x':
-                led.opt.exit_mode = LED_EXIT_VAL;
-                break;
-            case 'n':
-                led.opt.invert_selected = true;
-                break;
-            case 'm':
-                led.opt.output_match = true;
-                break;
-            case 'p':
-                led.opt.pack_selected = true;
-                break;
-            case 's':
-                led.opt.output_selected = true;
-                break;
-            case 'e':
-                led.opt.filter_blank = true;
-                break;
-            case 'f':
-                led.opt.file_in = LED_INPUT_FILE;
-                break;
-            case 'F':
-                led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", opt);
-                led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", opt);
-                led.opt.file_out = LED_OUTPUT_FILE_INPLACE;
-                break;
-            case 'W':
-                led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", opt);
-                led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", opt);
-                led.opt.file_out = LED_OUTPUT_FILE_WRITE;
-                led_str_init_str(&led.opt.file_out_path, optstr);
-                led_debug("led_init_opt: path=%s", led_str_str(&led.opt.file_out_path));
-                opti = arg->len;
-                break;
-            case 'A':
-                led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", opt);
-                led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", opt);
-                led.opt.file_out = LED_OUTPUT_FILE_APPEND;
-                led_str_init(&led.opt.file_out_path, optstr, 0);
-                led_debug("led_init_opt: path=%s", led_str_str(&led.opt.file_out_path));
-                opti = arg->len;
-                break;
-            case 'E':
-                led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", opt);
-                led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", opt);
-                led.opt.file_out = LED_OUTPUT_FILE_NEWEXT;
-                led.opt.file_out_extn = atoi(optstr);
-                if (led.opt.file_out_extn <= 0)
-                    led_str_init(&led.opt.file_out_ext, optstr, 0);
-                led_debug("led_init_opt: ext=%s", led_str_str(&led.opt.file_out_ext));
-                opti =arg->len;
-                break;
-            case 'D':
-                led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", opt);
-                led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", opt);
-                led_str_init(&led.opt.file_out_dir, optstr, 0);
-                led.opt.file_out = LED_OUTPUT_FILE_DIR;
-                led_debug("led_init_opt: dir=%s", led_str_str(&led.opt.file_out_dir));
-                opti = arg->len;
-                break;
-            case 'U':
-                led.opt.file_out_unchanged = true;
-                break;
-            case 'X':
-                led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", opt);
-                led.opt.exec = true;
-                break;
-            default:
-                led_assert(false, LED_ERR_ARG, "Unknown option: -%c", opt);
+        led_str_foreach_uchar(arg) {
+            const char* optstr = NULL;
+            led_debug("led_init_opt: option=%lc sitcked=%s", foreach.uc, optstr);
+            switch (foreach.uc) {
+                case '-':
+                    break;
+                case 'h':
+                    led.opt.help = true;
+                    break;
+                case 'v':
+                    led.opt.verbose = true;
+                    break;
+                case 'q':
+                    led.opt.quiet = true;
+                    break;
+                case 'r':
+                    led.opt.report = true;
+                    break;
+                case 'x':
+                    led.opt.exit_mode = LED_EXIT_VAL;
+                    break;
+                case 'n':
+                    led.opt.invert_selected = true;
+                    break;
+                case 'm':
+                    led.opt.output_match = true;
+                    break;
+                case 'p':
+                    led.opt.pack_selected = true;
+                    break;
+                case 's':
+                    led.opt.output_selected = true;
+                    break;
+                case 'e':
+                    led.opt.filter_blank = true;
+                    break;
+                case 'f':
+                    led.opt.file_in = LED_INPUT_FILE;
+                    break;
+                case 'F':
+                    led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", foreach.uc);
+                    led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", foreach.uc);
+                    led.opt.file_out = LED_OUTPUT_FILE_INPLACE;
+                    break;
+                case 'W':
+                    led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", foreach.uc);
+                    led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", foreach.uc);
+                    led.opt.file_out = LED_OUTPUT_FILE_WRITE;
+                    optstr = led_str_str_at(arg, foreach.in);
+                    led_str_init_str(&led.opt.file_out_path, optstr);
+                    led_debug("led_init_opt: path=%s", led_str_str(&led.opt.file_out_path));
+                    break;
+                case 'A':
+                    led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", foreach.uc);
+                    led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", foreach.uc);
+                    led.opt.file_out = LED_OUTPUT_FILE_APPEND;
+                    optstr = led_str_str_at(arg, foreach.in);
+                    led_str_init_str(&led.opt.file_out_path, optstr);
+                    led_debug("led_init_opt: path=%s", led_str_str(&led.opt.file_out_path));
+                    break;
+                case 'E':
+                    led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", foreach.uc);
+                    led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", foreach.uc);
+                    led.opt.file_out = LED_OUTPUT_FILE_NEWEXT;
+                    optstr = led_str_str_at(arg, foreach.in);
+                    led.opt.file_out_extn = atoi(optstr);
+                    if (led.opt.file_out_extn <= 0)
+                        led_str_init_str(&led.opt.file_out_ext, optstr);
+                    led_debug("led_init_opt: ext=%s", led_str_str(&led.opt.file_out_ext));
+                    break;
+                case 'D':
+                    led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", foreach.uc);
+                    led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", foreach.uc);
+                    led.opt.file_out = LED_OUTPUT_FILE_DIR;
+                    optstr = led_str_str_at(arg, foreach.in);
+                    led_str_init_str(&led.opt.file_out_dir, optstr);
+                    led_debug("led_init_opt: dir=%s", led_str_str(&led.opt.file_out_dir));
+                    break;
+                case 'U':
+                    led.opt.file_out_unchanged = true;
+                    break;
+                case 'X':
+                    led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", foreach.uc);
+                    led.opt.exec = true;
+                    break;
+                default:
+                    led_assert(false, LED_ERR_ARG, "Unknown option: -%c", foreach.uc);
             }
+            if (optstr) break; // the option required a value on following characters, we have to stop to scan for agregated options.
         }
     }
     return rc;
@@ -212,20 +213,21 @@ bool led_init_func(led_str_t* arg) {
         // check if additional func can be defined
         led_assert(led.func_count < LED_FUNC_MAX, LED_ERR_ARG, "Maximum functions reached %d", LED_FUNC_MAX );
 
-        // search for function
+        // get the function name
         led_str_t fname;
         led_str_cut_next(arg, fsep, &fname);
+
+        // find the function id
         size_t ifunc = led.func_count++;
         led_fn_t* pfunc = &led.func_list[ifunc];
-        led_debug("led_init_func: table max=%d", led_fn_table_size());
-        for (pfunc->id = 0; pfunc->id < led_fn_table_size(); pfunc->id++) {
-            led_fn_desc_t* pfn_desc = led_fn_table_descriptor(pfunc->id);
-            if (led_str_equal_str(&fname, pfn_desc->short_name) || led_str_equal_str(&fname, pfn_desc->long_name)) {
-                led_debug("led_init_func: function found=%d", pfunc->id);
+        pfunc->id = led_fn_table_size();
+        led_debug("led_init_func: table size=%d", led_fn_table_size());
+        led_foreach_pval_len(led_fn_table_descriptor(0), led_fn_table_size())
+            if (led_str_equal_str(&fname, foreach.pv->short_name) || led_str_equal_str(&fname, foreach.pv->long_name)) {
+                led_debug("led_init_func: function found=%d", foreach.i);
+                pfunc->id = foreach.i;
                 break;
             }
-        }
-
         // check if func is usable
         led_assert(pfunc->id < led_fn_table_size(), LED_ERR_ARG, "Unknown function: %s", led_str_str(&fname));
         led_assert(led_fn_table_descriptor(pfunc->id)->impl != NULL, LED_ERR_ARG, "Function not yet implemented in: %s", led_fn_table_descriptor(pfunc->id)->long_name);
@@ -356,6 +358,7 @@ void led_init_config() {
 }
 
 void led_init(int argc, char* argv[]) {
+    setlocale(LC_ALL, "");
     led_debug("led_init:");
 
     led_regex_init();
