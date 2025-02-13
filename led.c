@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
                     else
                         led_process_write();
                 }
-            } while(isline);
+            } while (isline);
         }
     if (led.opt.report)
         led_report();

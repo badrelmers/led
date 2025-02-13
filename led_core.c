@@ -110,7 +110,7 @@ bool led_init_opt(led_str_t* arg) {
     if (rc) {
         led_debug("led_init_opt: arg option=%s", led_str_str(arg));
         size_t opti = 1;
-        while(opti < arg->len) {
+        while (opti < arg->len) {
             led_uchar_t opt = led_str_uchar_next(arg, &opti);
             char* optstr = led_str_str_at(arg, opti);
             led_debug("led_init_opt: option=%c sitcked=%s", opt, optstr);
@@ -243,7 +243,7 @@ bool led_init_func(led_str_t* arg) {
         }
 
         // store func arguments
-        while(!led_str_isempty(arg)) {
+        while (!led_str_isempty(arg)) {
             // check if additional func arg can be defined
             led_assert(pfunc->arg_count < LED_FARG_MAX, LED_ERR_ARG, "Maximum function argments reached %d", LED_FARG_MAX );
             led_str_t* farg = &(pfunc->arg[pfunc->arg_count++].lstr);
@@ -290,8 +290,8 @@ bool led_init_sel(led_str_t* arg) {
 }
 
 void led_init_config() {
-    for (size_t ifunc = 0; ifunc < led.func_count; ifunc++) {
-        led_fn_t* pfunc = &led.func_list[ifunc];
+    led_foreach_pval_len(led.func_list, led.func_count) {
+        led_fn_t* pfunc = foreach.pv;
 
         led_fn_desc_t* pfn_desc = led_fn_table_descriptor(pfunc->id);
         led_debug("led_init_config: configure function=%s id=%d", pfn_desc->long_name, pfunc->id);
