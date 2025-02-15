@@ -61,6 +61,11 @@ void led_debug(const char* message, ...);
         foreach.i < (size_t)STOP;\
         foreach.i++)
 
+#define led_foreach_r_int_range(START, STOP) \
+    for (struct{size_t i;} foreach = {STOP - 1};\
+        foreach.i < (size_t)STOP && foreach.i >= (size_t)START;\
+        foreach.i--)
+
 #define led_foreach_int(LEN) led_foreach_int_range(0, LEN)
 
 #define led_foreach_pval_len(ARRAY, LEN) \
@@ -89,7 +94,7 @@ inline char led_uchar_to_char(led_uchar_t c) {
     return (char)(c & 0xFF);
 }
 
-inline size_t led_uchar_size_str(char* str) {
+inline size_t led_uchar_size_str(const char* str) {
     return led_uchar_size_table[(((uint8_t *)(str))[0] & 0xFF) >> 4];
 }
 
@@ -99,6 +104,16 @@ inline size_t led_uchar_size(led_uchar_t c) {
 
 inline bool led_uchar_iscont(char c) {
     return (c & 0xC0) == 0x80;
+}
+
+inline size_t led_uchar_pos_next(const char* str, size_t idx) {
+    return idx + led_uchar_size_str(str + idx);
+}
+
+inline size_t led_uchar_pos_prev(const char* str, size_t idx) {
+    if (idx)
+        for (idx--; idx && led_uchar_iscont(str[idx]); idx--);
+    return idx;
 }
 
 inline bool led_uchar_isalnum(led_uchar_t c) {
@@ -122,9 +137,23 @@ inline led_uchar_t led_uchar_toupper(led_uchar_t c) {
     return c;
 }
 
-size_t led_uchar_from_str(char* str, led_uchar_t* uchar);
-size_t led_uchar_from_rstr(char* str, size_t len, led_uchar_t* uchar);
 size_t led_uchar_to_str(char* str, led_uchar_t uchar);
+size_t led_uchar_from_str(const char* str, led_uchar_t* puchar);
+
+inline led_uchar_t led_uchar_of_str(const char* str) {
+    led_uchar_t uchar;
+    led_uchar_from_str(str, &uchar);
+    return uchar;
+}
+
+
+inline bool led_uchar_isin(led_uchar_t c, const char* str) {
+    led_uchar_t cstr;
+    for (size_t i = 0, in = led_uchar_from_str(str, &cstr); str[i]; i += in, in = led_uchar_from_str(str + i, &cstr))
+        if (c == cstr) return true;
+    return false;
+}
+
 
 /* codepoints UFT-8 functions are not necessary but we let it if needed.
 
@@ -173,11 +202,18 @@ typedef struct {
 #define led_str_foreach_char(VAR) led_str_foreach_char_zone(VAR, 0, led_str_len(VAR))
 
 #define led_str_foreach_uchar_zone(VAR, START, STOP) \
-    for (struct{size_t i; size_t in; led_uchar_t uc; size_t nuc;} foreach = {START, START + led_uchar_size_str((VAR)->str + START), led_str_uchar_at(VAR, START), 0};\
+    for (struct{size_t i; size_t in; led_uchar_t uc; size_t nuc; size_t ucl;} foreach = {START, led_str_pos_uchar_next(VAR, START), led_str_uchar_at(VAR, START), 0, led_uchar_size_str((VAR)->str + START)};\
         foreach.i < STOP;\
-        foreach.i = foreach.in, foreach.uc = led_str_uchar_next(VAR, &foreach.in), foreach.nuc++)
+        foreach.i = foreach.in, foreach.uc = led_str_uchar_next(VAR, foreach.in, &foreach.in), foreach.nuc++, foreach.ucl = foreach.in - foreach.i)
 
 #define led_str_foreach_uchar(VAR) led_str_foreach_uchar_zone(VAR, 0, led_str_len(VAR))
+
+#define led_str_foreach_uchar_zone_r(VAR, START, STOP) \
+    for (struct{size_t i; size_t in; led_uchar_t uc; size_t nuc; size_t ucl;} foreach = {led_str_pos_uchar_prev(VAR, STOP), STOP, led_str_uchar_prev(VAR, STOP, NULL), 0, STOP - led_str_pos_uchar_prev(VAR, STOP)};\
+        foreach.i >= START;\
+        foreach.in = foreach.i, foreach.uc = led_str_uchar_prev(VAR, foreach.i, &foreach.i), foreach.nuc++, foreach.ucl = foreach.in - foreach.i)
+
+#define led_str_foreach_uchar_r(VAR) led_str_foreach_uchar_zone_r(VAR, 0, led_str_len(VAR))
 
 inline size_t led_str_len(led_str_t* lstr) {
     return lstr->len;
@@ -278,11 +314,9 @@ inline led_str_t* led_str_app_uchar(led_str_t* lstr, led_uchar_t uchar) {
 }
 
 inline led_str_t* led_str_trunk_uchar(led_str_t* lstr, led_uchar_t uchar) {
-    led_uchar_t c = 0;
-    size_t uchar_len = led_uchar_from_rstr(lstr->str, lstr->len, &c);
-    // led_debug("led_str_trunk_uchar - len=%lu", uchar_len);
-    if (uchar == c) {
-        lstr->len -= uchar_len;
+    size_t idx = led_uchar_pos_prev(lstr->str, lstr->len);
+    if (uchar == led_uchar_of_str(lstr->str + idx)) {
+        lstr->len = idx;
         lstr->str[lstr->len] = '\0';
     }
     return lstr;
@@ -344,20 +378,31 @@ inline led_uchar_t led_str_uchar_first(led_str_t* lstr) {
 }
 
 inline led_uchar_t led_str_uchar_last(led_str_t* lstr) {
-    if (lstr->len == 0) return '\0';
-    led_uchar_t uchar = 0;
-    size_t idx = lstr->len;
-    while ( idx > 0 && led_uchar_iscont(lstr->str[--idx]) );
-    // led_debug("led_str_uchar_last - len=%lu idx=%lu", lstr->len, idx);
-    led_uchar_from_str(lstr->str + idx, &uchar);
+    size_t idx = led_uchar_pos_prev(lstr->str, lstr->len);
+    return led_uchar_of_str(lstr->str + idx);
+}
+
+inline led_uchar_t led_str_uchar_next(led_str_t* lstr, size_t idx, size_t* newidx) {
+    led_uchar_t uchar;
+    size_t ucharlen = led_uchar_from_str(lstr->str + idx, &uchar);
+    if (newidx) *newidx += ucharlen;
     return uchar;
 }
 
-inline led_uchar_t led_str_uchar_next(led_str_t* lstr, size_t* idx) {
-    led_uchar_t uchar;
-    *idx  += led_uchar_from_str(lstr->str + *idx, &uchar);
-    return uchar;
+inline size_t led_str_pos_uchar_next(led_str_t* lstr, size_t idx) {
+    return led_uchar_pos_next(lstr->str, idx);
 }
+
+inline led_uchar_t led_str_uchar_prev(led_str_t* lstr, size_t idx, size_t* newidx) {
+    idx = led_uchar_pos_prev(lstr->str, idx);
+    if (newidx) *newidx = idx;
+    return led_uchar_of_str(lstr->str + idx);
+}
+
+inline size_t led_str_pos_uchar_prev(led_str_t* lstr, size_t idx) {
+    return led_uchar_pos_prev(lstr->str, idx);
+}
+
 
 inline led_uchar_t led_str_uchar_n(led_str_t* lstr, size_t n) {
     led_str_foreach_uchar(lstr)
@@ -365,13 +410,6 @@ inline led_uchar_t led_str_uchar_n(led_str_t* lstr, size_t n) {
             return foreach.uc;
     return '\0';
 }
-
-inline led_uchar_t led_str_uchar_prev(led_str_t* lstr, size_t* idx) {
-    led_uchar_t uchar;
-    *idx  -= led_uchar_from_rstr(lstr->str, *idx, &uchar);
-    return uchar;
-}
-
 inline char* led_str_str_at(led_str_t* lstr, size_t idx) {
     if (led_uchar_iscont(lstr->str[idx])) return '\0';
     return lstr->str + idx;
@@ -414,7 +452,7 @@ inline bool led_str_startswith_str(led_str_t* lstr, const char* str) {
 inline size_t led_str_find_uchar_zn(led_str_t* lstr, led_uchar_t c, size_t start, size_t stop) {
     while ( start < stop ) {
         size_t pos = start;
-        if (led_str_uchar_next(lstr, &start) == c) return pos;
+        if (led_str_uchar_next(lstr, start, &start) == c) return pos;
     }
     return lstr->len;
 }

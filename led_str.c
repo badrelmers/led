@@ -129,47 +129,26 @@ size_t const led_uchar_size_table[] = {
     1,1,1,1,1,1,1,1,0,0,0,0,2,2,3,4
 };
 
-size_t led_uchar_from_str(char* str, led_uchar_t* uchar) {
-    size_t l = led_uchar_size_str(str);
-    // led_debug("led_uchar_from_str - len=%lu", l);
-    led_uchar_t c = 0;
-    for (size_t i = 0; i < l && str[i]; i++)
-        c = (c << 8) | ((uint8_t*)str)[i];
-    // led_debug("led_uchar_from_str - c=%x", c);
-    *uchar = c;
-    return l;
-}
-
-size_t led_uchar_from_rstr(char* str, size_t len, led_uchar_t* uchar) {
-    size_t uchar_len = 0;
-    led_uchar_t c = 0;
-    while ( len > 0 ) {
-        len--;
-        c = c | (((uint8_t*)str)[len] << (uchar_len*8));
-        uchar_len++;
-        // led_debug("led_uchar_from_rstr - len=%lu c=%x", uchar_len, c);
-        if ( !led_uchar_iscont(str[len]) ) {
-            *uchar = c;
-            return uchar_len;
-        }
-    }
-    return 0;
+size_t led_uchar_from_str(const char* str, led_uchar_t* puchar) {
+    size_t usize = led_uchar_size_str(str);
+    *puchar = 0;
+    for (size_t i = 0; i < usize; i++)
+        *puchar = (*puchar << 8) | ((uint8_t*)str)[i];
+    return usize;
 }
 
 size_t led_uchar_to_str(char* str, led_uchar_t uchar) {
     uint32_t mask = 0xFF000000;
-    size_t l = 0;
+    size_t usize = 0;
     for (size_t i = 0; i < 4; i++) {
-        uint8_t c = (uchar & mask) >> ((3-i)*8);
-        // led_debug("led_uchar_to_str - uchar&mask=%x shift=%x", (uchar & mask), c);
-        if (c) {
-            *((uint8_t*)str++) = c;
-            l++;
+        uint8_t ubyte = (uchar & mask) >> ((3-i)*8);
+        if (ubyte) {
+            *((uint8_t*)str++) = ubyte;
+            usize++;
         }
         mask >>= 8;
     }
-    // led_debug("led_uchar_to_str - %x => %x %x %x %x", uchar, (uint8_t)str[0], (uint8_t)str[1], (uint8_t)str[2], (uint8_t)str[3] );
-    return l;
+    return usize;
 }
 
 /* codepoints UFT-8 functions are not necessary but we let it if needed.
