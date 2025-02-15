@@ -56,23 +56,40 @@ void test_led_str_foreach_uchar() {
     led_str_decl(test, 16);
     led_str_app_str(&test,"ÂBCDÊF");
     led_debug("%s", test.str);
+    size_t i = 0;
     led_str_foreach_uchar(&test) {
         led_str_decl(schar, 5);
         led_str_app_uchar(&schar, foreach.uc);
-        led_debug("%d %d %s",foreach.i, foreach.in, led_str_str(&schar));
+        i = foreach.nuc;
+        led_debug("%lu %lu %lu %s",foreach.i, foreach.in, foreach.nuc, led_str_str(&schar));
     }
-    //led_assert(led_str_equal_str(&test, "test="), LED_ERR_INTERNAL, "test_led_str_foreach_uchar");
-}
-
-void test_led_str_foreach_uchar_zone() {
-    led_str_decl(test, 16);
-    led_str_app_str(&test,"ÂBCDÊF");
-    led_debug("%s", test.str);
+    led_assert(i == 6, LED_ERR_INTERNAL, "test_led_str_foreach_uchar_r: error in count");
+    led_debug("with zone");
     led_str_foreach_uchar_zone(&test,3,6) {
         led_str_decl(schar, 5);
         led_str_app_uchar(&schar, foreach.uc);
-        led_debug("%d %d %s",foreach.i, foreach.in, led_str_str(&schar));
+        i = foreach.nuc;
+        led_debug("%lu %lu %lu %s",foreach.i, foreach.in, foreach.nuc, led_str_str(&schar));
     }
+    led_assert(i == 3, LED_ERR_INTERNAL, "test_led_str_foreach_uchar_r: error in count");
+}
+
+void test_led_str_foreach_uchar_r() {
+    led_str_decl_str(test, "ÂBCDÊF");
+    led_debug("%s last is %lu", test.str, led_str_pos_uchar_prev(&test, led_str_len(&test)));
+
+    size_t i = 0;
+    led_str_foreach_uchar_r(&test) {
+        led_debug("%lu %lu %lu %c",foreach.i, foreach.in, foreach.nuc, foreach.uc);
+        i = foreach.nuc;
+    }
+    led_assert(i == 6, LED_ERR_INTERNAL, "test_led_str_foreach_uchar_r: error in count");
+    led_debug("with zone");
+    led_str_foreach_uchar_zone_r(&test, 2, 5) {
+        led_debug("%lu %lu %lu %c",foreach.i, foreach.in, foreach.nuc, foreach.uc);
+        i = foreach.nuc;
+    }
+    led_assert(i == 3, LED_ERR_INTERNAL, "test_led_str_foreach_uchar_r: error in count");
     //led_assert(led_str_equal_str(&test, "test="), LED_ERR_INTERNAL, "test_led_str_foreach_uchar_zone");
 }
 
@@ -151,7 +168,7 @@ int main(int , char* []) {
     test(test_led_str_uchar_last);
     test(test_led_str_trunk_uchar);
     test(test_led_str_foreach_uchar);
-    test(test_led_str_foreach_uchar_zone);
+    test(test_led_str_foreach_uchar_r);
     test(test_led_str_cut_next);
     test(test_led_str_startswith);
     test(test_led_str_startswith_str);

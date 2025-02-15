@@ -562,12 +562,8 @@ void led_fn_impl_basename(led_fn_t* pfunc) {
 void led_fn_impl_revert(led_fn_t* pfunc) {
     led_zone_pre_process(pfunc);
 
-    // led_str_foreach_uchar_zone_r(&led.line_prep.lstr, led.line_prep.zone_start, led.line_prep.zone_stop)
-    //     led_str_app_uchar(&led.line_write.lstr, led_str_uchar_prev(&led.line_prep.lstr, &i));
-
-    size_t i = led.line_prep.zone_stop;
-    while ( i > led.line_prep.zone_start )
-        led_str_app_uchar(&led.line_write.lstr, led_str_uchar_prev(&led.line_prep.lstr, i, &i));
+    led_str_foreach_uchar_zone_r(&led.line_prep.lstr, led.line_prep.zone_start, led.line_prep.zone_stop)
+        led_str_app_uchar(&led.line_write.lstr, foreach.uc);
 
     led_zone_post_process();
 }

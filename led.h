@@ -202,15 +202,15 @@ typedef struct {
 #define led_str_foreach_char(VAR) led_str_foreach_char_zone(VAR, 0, led_str_len(VAR))
 
 #define led_str_foreach_uchar_zone(VAR, START, STOP) \
-    for (struct{size_t i; size_t in; led_uchar_t uc; size_t nuc; size_t ucl;} foreach = {START, led_str_pos_uchar_next(VAR, START), led_str_uchar_at(VAR, START), 0, led_uchar_size_str((VAR)->str + START)};\
+    for (struct{size_t i; size_t in; led_uchar_t uc; size_t nuc; size_t ucl;} foreach = {START, led_str_pos_uchar_next(VAR, START), led_str_uchar_at(VAR, START), 1, led_uchar_size_str((VAR)->str + START)};\
         foreach.i < STOP;\
         foreach.i = foreach.in, foreach.uc = led_str_uchar_next(VAR, foreach.in, &foreach.in), foreach.nuc++, foreach.ucl = foreach.in - foreach.i)
 
 #define led_str_foreach_uchar(VAR) led_str_foreach_uchar_zone(VAR, 0, led_str_len(VAR))
 
 #define led_str_foreach_uchar_zone_r(VAR, START, STOP) \
-    for (struct{size_t i; size_t in; led_uchar_t uc; size_t nuc; size_t ucl;} foreach = {led_str_pos_uchar_prev(VAR, STOP), STOP, led_str_uchar_prev(VAR, STOP, NULL), 0, STOP - led_str_pos_uchar_prev(VAR, STOP)};\
-        foreach.i >= START;\
+    for (struct{size_t i; size_t in; led_uchar_t uc; size_t nuc; size_t ucl;} foreach = {led_str_pos_uchar_prev(VAR, STOP), STOP, led_str_uchar_prev(VAR, STOP, NULL), 1, STOP - led_str_pos_uchar_prev(VAR, STOP)};\
+        foreach.in > START;\
         foreach.in = foreach.i, foreach.uc = led_str_uchar_prev(VAR, foreach.i, &foreach.i), foreach.nuc++, foreach.ucl = foreach.in - foreach.i)
 
 #define led_str_foreach_uchar_r(VAR) led_str_foreach_uchar_zone_r(VAR, 0, led_str_len(VAR))
