@@ -261,15 +261,21 @@ inline led_str_t* led_str_clone(led_str_t* lstr, led_str_t* lstr_src) {
 }
 
 inline led_str_t* led_str_cpy(led_str_t* lstr, led_str_t* lstr_src) {
-    for (lstr->len = 0; lstr->len < lstr_src->len && lstr->len + 1 < lstr->size; lstr->len++)
-        lstr->str[lstr->len] = lstr_src->str[lstr->len];
+    lstr->len = 0;
+    led_str_foreach_char(lstr_src)
+        if (lstr->len+1 < lstr->size )
+            lstr->str[lstr->len++] = foreach.c;
+        else break;
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
 
 inline led_str_t* led_str_cpy_str(led_str_t* lstr, const char* str) {
-    for (lstr->len=0; str[lstr->len] && lstr->len+1 < lstr->size; lstr->len++)
-        lstr->str[lstr->len]=str[lstr->len];
+    lstr->len = 0;
+    led_foreach_char(str)
+        if (lstr->len+1 < lstr->size )
+            lstr->str[lstr->len++] = foreach.c;
+        else break;
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
@@ -474,12 +480,32 @@ inline bool led_str_has_uchar(led_str_t* lstr, led_uchar_t uc) {
     return led_str_find_uchar(lstr, uc) < lstr->len;
 }
 
-inline size_t led_str_find(led_str_t* lstr1, led_str_t* lstr2) {
-    size_t i=0, j=0;
-    for (; i < lstr1->len && lstr2->str[j]; i++)
-        if (lstr1->str[i] == lstr2->str[j]) j++;
-        else j = 0;
-    return lstr2->str[j] ? lstr1->len: i - j;
+inline size_t led_str_find(led_str_t* lstr, led_str_t* lstr_sub) {
+    size_t isub=0;
+    led_str_foreach_char(lstr)
+        if (isub == lstr_sub->len)
+            return foreach.i - isub;
+        else if (lstr_sub->str[isub] == foreach.c)
+            isub++;
+        else {
+            foreach.i -= isub;
+            isub = 0;
+        }
+    return lstr->len;
+}
+
+inline size_t led_str_find_str(led_str_t* lstr, const char* str_sub) {
+    size_t isub=0;
+    led_str_foreach_char(lstr)
+        if (!str_sub[isub])
+            return foreach.i - isub;
+        else if (str_sub[isub] == foreach.c)
+            isub++;
+        else {
+            foreach.i -= isub;
+            isub = 0;
+        }
+    return lstr->len;
 }
 
 inline led_str_t* led_str_basename(led_str_t* lstr) {

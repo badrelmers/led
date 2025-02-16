@@ -170,6 +170,15 @@ void test_led_str_find_uchar() {
     led_assert(idx == led_str_len(&test1), LED_ERR_INTERNAL, "test_led_str_find_uchar (not)");
 }
 
+void test_led_str_find() {
+    led_str_decl_str(test, "â short tëst");
+    led_str_decl_str(test_sub, "short");
+
+    led_assert(led_str_find(&test,&test_sub) == 3, LED_ERR_INTERNAL, "test_led_str_find: test sub ");
+    led_assert(led_str_find_str(&test,"short") == 3, LED_ERR_INTERNAL, "test_led_str_find_str: test sub ");
+    led_assert(led_str_find_str(&test,"shot") == led_str_len(&test), LED_ERR_INTERNAL, "test_led_str_find_str: test sub not found");
+}
+
 //-----------------------------------------------
 // LEDTEST main
 //-----------------------------------------------
@@ -189,5 +198,6 @@ int main(int , char* []) {
     test(test_led_str_startswith);
     test(test_led_str_startswith_str);
     test(test_led_str_find_uchar);
+    test(test_led_str_find);
     return 0;
 }
