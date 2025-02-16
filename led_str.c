@@ -100,11 +100,11 @@ bool led_str_match_offset(led_str_t* lstr, pcre2_code* regex, size_t* pzone_star
     return rc > 0;
 }
 
-led_str_t* led_str_cut_next(led_str_t* lstr, led_uchar_t uchar, led_str_t* stok) {
+led_str_t* led_str_cut_next(led_str_t* lstr, led_uchar_t uc, led_str_t* stok) {
     led_str_clone(stok, lstr);
     led_str_foreach_uchar(lstr) {
         // led_debug("led_str_cut_next - i=%u c=%x l=%u", i, c, l);
-        if ( foreach.uc == uchar ) {
+        if ( foreach.uc == uc ) {
             stok->str[foreach.i] = '\0';
             stok->len = foreach.i;
             stok->size = foreach.i_next;
@@ -137,11 +137,11 @@ size_t led_uchar_from_str(const char* str, led_uchar_t* puchar) {
     return usize;
 }
 
-size_t led_uchar_to_str(char* str, led_uchar_t uchar) {
+size_t led_uchar_to_str(char* str, led_uchar_t uc) {
     uint32_t mask = 0xFF000000;
     size_t usize = 0;
     for (size_t i = 0; i < 4; i++) {
-        uint8_t ubyte = (uchar & mask) >> ((3-i)*8);
+        uint8_t ubyte = (uc & mask) >> ((3-i)*8);
         if (ubyte) {
             *((uint8_t*)str++) = ubyte;
             usize++;
@@ -153,7 +153,7 @@ size_t led_uchar_to_str(char* str, led_uchar_t uchar) {
 
 /* codepoints UFT-8 functions are not necessary but we let it if needed.
 
-bool led_uchar_isvalid(led_uchar_t c)
+bool led_uchar_isvalid(led_uchar_t uc)
 {
   if (c <= 0x7F) return true;
 
@@ -187,7 +187,7 @@ led_uchar_t led_uchar_encode(uint32_t code) {
     return uc;
 }
 
-uint32_t led_uchar_decode(led_uchar_t c) {
+uint32_t led_uchar_decode(led_uchar_t uc) {
   uint32_t mask;
   if (c > 0x7F) {
     mask = (c <= 0x00EFBFBF) ? 0x000F0000 : 0x003F0000 ;

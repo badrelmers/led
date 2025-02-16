@@ -90,16 +90,16 @@ typedef uint32_t led_uchar_t;
 
 extern const size_t led_uchar_size_table[];
 
-inline char led_uchar_to_char(led_uchar_t c) {
-    return (char)(c & 0xFF);
+inline char led_uchar_to_char(led_uchar_t uc) {
+    return (char)(uc & 0xFF);
 }
 
 inline size_t led_uchar_size_str(const char* str) {
     return led_uchar_size_table[(((uint8_t *)(str))[0] & 0xFF) >> 4];
 }
 
-inline size_t led_uchar_size(led_uchar_t c) {
-    return 1 + ((c&0x8000)>>15) + ((c&0x800000)>>23) + ((c&0x80000000)>>31);
+inline size_t led_uchar_size(led_uchar_t uc) {
+    return 1 + ((uc & 0x8000)>>15) + ((uc & 0x800000)>>23) + ((uc & 0x80000000)>>31);
 }
 
 inline bool led_uchar_iscont(char c) {
@@ -116,34 +116,34 @@ inline size_t led_uchar_pos_prev(const char* str, size_t idx) {
     return idx;
 }
 
-inline bool led_uchar_isalnum(led_uchar_t c) {
-    return isalnum(led_uchar_to_char(c));
+inline bool led_uchar_isalnum(led_uchar_t uc) {
+    return isalnum(led_uchar_to_char(uc));
 }
 
-inline bool led_uchar_isdigit(led_uchar_t c) {
-    return isdigit(led_uchar_to_char(c));
+inline bool led_uchar_isdigit(led_uchar_t uc) {
+    return isdigit(led_uchar_to_char(uc));
 }
 
-inline bool led_uchar_isspace(led_uchar_t c) {
-    return isspace(led_uchar_to_char(c));
+inline bool led_uchar_isspace(led_uchar_t uc) {
+    return isspace(led_uchar_to_char(uc));
 }
 
-inline led_uchar_t led_uchar_tolower(led_uchar_t c) {
-    if (c >= 'A' && c <= 'Z') c = tolower(led_uchar_to_char(c));
-    return c;
+inline led_uchar_t led_uchar_tolower(led_uchar_t uc) {
+    if (uc >= 'A' && uc <= 'Z') uc = tolower(led_uchar_to_char(uc));
+    return uc;
 }
-inline led_uchar_t led_uchar_toupper(led_uchar_t c) {
-    if (c >= 'a' && c <= 'z') c = toupper(led_uchar_to_char(c));
-    return c;
+inline led_uchar_t led_uchar_toupper(led_uchar_t uc) {
+    if (uc >= 'a' && uc <= 'z') uc = toupper(led_uchar_to_char(uc));
+    return uc;
 }
 
-size_t led_uchar_to_str(char* str, led_uchar_t uchar);
+size_t led_uchar_to_str(char* str, led_uchar_t uc);
 size_t led_uchar_from_str(const char* str, led_uchar_t* puchar);
 
 inline led_uchar_t led_uchar_of_str(const char* str) {
-    led_uchar_t uchar;
-    led_uchar_from_str(str, &uchar);
-    return uchar;
+    led_uchar_t uc;
+    led_uchar_from_str(str, &uc);
+    return uc;
 }
 
 inline bool led_uchar_isin(led_uchar_t uc, const char* str) {
@@ -154,9 +154,9 @@ inline bool led_uchar_isin(led_uchar_t uc, const char* str) {
 
 /* codepoints UFT-8 functions are not necessary but we let it if needed.
 
-bool led_uchar_isvalid(led_uchar_t c);
+bool led_uchar_isvalid(led_uchar_t uc);
 led_uchar_t led_uchar_encode(uint32_t code);
-uint32_t led_uchar_decode(led_uchar_t c);
+uint32_t led_uchar_decode(led_uchar_t uc);
 
 */
 
@@ -191,26 +191,26 @@ typedef struct {
     led_str_init(&VAR,VAR##_buf,SRC.len); \
     led_str_cpy(&VAR, &SRC)
 
-#define led_str_foreach_char_zone(VAR, START, STOP) \
+#define led_str_foreach_char_zn(VAR, START, STOP) \
     for (struct{size_t i; char c;} foreach = {START, led_str_str(VAR)[START]};\
         foreach.i < STOP;\
         foreach.c = led_str_str(VAR)[++foreach.i])
 
-#define led_str_foreach_char(VAR) led_str_foreach_char_zone(VAR, 0, led_str_len(VAR))
+#define led_str_foreach_char(VAR) led_str_foreach_char_zn(VAR, 0, led_str_len(VAR))
 
-#define led_str_foreach_uchar_zone(VAR, START, STOP) \
+#define led_str_foreach_uchar_zn(VAR, START, STOP) \
     for (struct{size_t i; size_t i_next; led_uchar_t uc; size_t uc_count; size_t uc_size;} foreach = {START, led_str_pos_uchar_next(VAR, START), led_str_uchar_at(VAR, START), 1, led_str_uchar_size_at(VAR, START)};\
         foreach.i < STOP;\
         foreach.i = foreach.i_next, foreach.uc = led_str_uchar_next(VAR, foreach.i_next, &foreach.i_next), foreach.uc_count++, foreach.uc_size = foreach.i_next - foreach.i)
 
-#define led_str_foreach_uchar(VAR) led_str_foreach_uchar_zone(VAR, 0, led_str_len(VAR))
+#define led_str_foreach_uchar(VAR) led_str_foreach_uchar_zn(VAR, 0, led_str_len(VAR))
 
-#define led_str_foreach_uchar_zone_r(VAR, START, STOP) \
+#define led_str_foreach_uchar_zn_r(VAR, START, STOP) \
     for (struct{size_t i; size_t i_next; led_uchar_t uc; size_t uc_count; size_t uc_size;} foreach = {led_str_pos_uchar_prev(VAR, STOP), STOP, led_str_uchar_prev(VAR, STOP, NULL), 1, STOP - led_str_pos_uchar_prev(VAR, STOP)};\
         foreach.i_next > START;\
         foreach.i_next = foreach.i, foreach.uc = led_str_uchar_prev(VAR, foreach.i, &foreach.i), foreach.uc_count++, foreach.uc_size = foreach.i_next - foreach.i)
 
-#define led_str_foreach_uchar_r(VAR) led_str_foreach_uchar_zone_r(VAR, 0, led_str_len(VAR))
+#define led_str_foreach_uchar_r(VAR) led_str_foreach_uchar_zn_r(VAR, 0, led_str_len(VAR))
 
 inline size_t led_str_len(led_str_t* lstr) {
     return lstr->len;
@@ -296,19 +296,19 @@ inline led_str_t* led_str_app_zn(led_str_t* lstr, led_str_t* lstr_src, size_t st
     return lstr;
 }
 
-inline led_str_t* led_str_app_uchar(led_str_t* lstr, led_uchar_t uchar) {
-    size_t uc_size = led_uchar_size(uchar);
+inline led_str_t* led_str_app_uchar(led_str_t* lstr, led_uchar_t uc) {
+    size_t uc_size = led_uchar_size(uc);
     if (lstr->len + uc_size < lstr->size) {
-        led_uchar_to_str(lstr->str + lstr->len, uchar);
+        led_uchar_to_str(lstr->str + lstr->len, uc);
         lstr->len += uc_size;
         lstr->str[lstr->len] = '\0';
     }
     return lstr;
 }
 
-inline led_str_t* led_str_trunk_uchar(led_str_t* lstr, led_uchar_t uchar) {
+inline led_str_t* led_str_trunk_uchar(led_str_t* lstr, led_uchar_t uc) {
     size_t idx = led_uchar_pos_prev(lstr->str, lstr->len);
-    if (uchar == led_uchar_of_str(lstr->str + idx)) {
+    if (uc == led_uchar_of_str(lstr->str + idx)) {
         lstr->len = idx;
         lstr->str[lstr->len] = '\0';
     }
@@ -346,8 +346,7 @@ inline led_str_t* led_str_rtrim(led_str_t* lstr) {
 inline led_str_t* led_str_ltrim(led_str_t* lstr) {
     size_t i=0,j=0;
     for (; i < lstr->len && isspace(lstr->str[i]); i++);
-    for (; i < lstr->len; i++,j++)
-        lstr->str[j] = lstr->str[i];
+    for (; i < lstr->len; i++,j++) lstr->str[j] = lstr->str[i];
     lstr->len = j;
     lstr->str[lstr->len] = '\0';
     return lstr;
@@ -357,13 +356,13 @@ inline led_str_t* led_str_trim(led_str_t* lstr) {
     return led_str_ltrim(led_str_rtrim(lstr));
 }
 
-led_str_t* led_str_cut_next(led_str_t* lstr, led_uchar_t uchar, led_str_t* stok);
+led_str_t* led_str_cut_next(led_str_t* lstr, led_uchar_t uc, led_str_t* stok);
 
 inline led_uchar_t led_str_uchar_at(led_str_t* lstr, size_t idx) {
     if (led_uchar_iscont(lstr->str[idx])) return '\0';
-    led_uchar_t uchar;
-    led_uchar_from_str(lstr->str + idx, &uchar);
-    return uchar;
+    led_uchar_t uc;
+    led_uchar_from_str(lstr->str + idx, &uc);
+    return uc;
 }
 
 inline led_uchar_t led_str_uchar_size_at(led_str_t* lstr, size_t idx) {
@@ -380,10 +379,10 @@ inline led_uchar_t led_str_uchar_last(led_str_t* lstr) {
 }
 
 inline led_uchar_t led_str_uchar_next(led_str_t* lstr, size_t idx, size_t* newidx) {
-    led_uchar_t uchar;
-    size_t ucharlen = led_uchar_from_str(lstr->str + idx, &uchar);
+    led_uchar_t uc;
+    size_t ucharlen = led_uchar_from_str(lstr->str + idx, &uc);
     if (newidx) *newidx += ucharlen;
-    return uchar;
+    return uc;
 }
 
 inline size_t led_str_pos_uchar_next(led_str_t* lstr, size_t idx) {
@@ -446,34 +445,28 @@ inline bool led_str_startswith_str(led_str_t* lstr, const char* str) {
     return led_str_startswith_str_at(lstr, str, 0);
 }
 
-inline size_t led_str_find_uchar_zn(led_str_t* lstr, led_uchar_t c, size_t start, size_t stop) {
-    while ( start < stop ) {
-        size_t pos = start;
-        if (led_str_uchar_next(lstr, start, &start) == c) return pos;
-    }
-    return lstr->len;
+inline size_t led_str_find_uchar_zn(led_str_t* lstr, led_uchar_t uc, size_t start, size_t stop) {
+    led_str_foreach_uchar_zn(lstr, start, stop)
+        if (foreach.uc == uc) return foreach.i;
+    return led_str_len(lstr);
 }
 
-inline size_t led_str_find_uchar(led_str_t* lstr, led_uchar_t c) {
-    return led_str_find_uchar_zn(lstr, c, 0, lstr->len);
+inline size_t led_str_find_uchar(led_str_t* lstr, led_uchar_t uc) {
+    return led_str_find_uchar_zn(lstr, uc, 0, lstr->len);
 }
 
-inline size_t led_str_rfind_uchar_zn(led_str_t* lstr, led_uchar_t c, size_t start, size_t stop) {
-    led_uchar_t uchar;
-    while ( stop > start )
-        if ( !led_uchar_iscont(lstr->str[--stop]) ) {
-            led_uchar_from_str(lstr->str + stop, &uchar);
-            if ( uchar == c ) return stop;
-        }
-    return lstr->len;
+inline size_t led_str_rfind_uchar_zn(led_str_t* lstr, led_uchar_t uc, size_t start, size_t stop) {
+    led_str_foreach_uchar_zn_r(lstr, start, stop)
+        if (foreach.uc == uc) return foreach.i;
+    return led_str_len(lstr);
 }
 
-inline size_t led_str_rfind_uchar(led_str_t* lstr, led_uchar_t c) {
-    return led_str_rfind_uchar_zn(lstr, c, 0, lstr->len);
+inline size_t led_str_rfind_uchar(led_str_t* lstr, led_uchar_t uc) {
+    return led_str_rfind_uchar_zn(lstr, uc, 0, lstr->len);
 }
 
-inline bool led_str_ischar(led_str_t* lstr, led_uchar_t c) {
-    return led_str_find_uchar(lstr, c) < lstr->len;
+inline bool led_str_ischar(led_str_t* lstr, led_uchar_t uc) {
+    return led_str_find_uchar(lstr, uc) < lstr->len;
 }
 
 inline size_t led_str_find(led_str_t* lstr1, led_str_t* lstr2) {
@@ -615,17 +608,17 @@ inline bool led_line_isselected(led_line_t* pline) {
     return pline->selected;
 }
 
-inline led_line_t* led_line_append_zone(led_line_t* pline, led_line_t* pline_src) {
+inline led_line_t* led_line_append_zn(led_line_t* pline, led_line_t* pline_src) {
     led_str_app_zn(&pline->lstr, &pline_src->lstr, pline_src->zone_start, pline_src->zone_stop);
     return pline;
 }
 
-inline led_line_t* led_line_append_before_zone(led_line_t* pline, led_line_t* pline_src) {
+inline led_line_t* led_line_append_before_zn(led_line_t* pline, led_line_t* pline_src) {
     led_str_app_zn(&pline->lstr, &pline_src->lstr, 0, pline_src->zone_start);
     return pline;
 }
 
-inline led_line_t* led_line_append_after_zone(led_line_t* pline, led_line_t* pline_src) {
+inline led_line_t* led_line_append_after_zn(led_line_t* pline, led_line_t* pline_src) {
     led_str_app_zn(&pline->lstr, &pline_src->lstr, pline_src->zone_stop, pline_src->lstr.len);
     return pline;
 }

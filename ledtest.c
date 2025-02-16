@@ -25,9 +25,9 @@
 void test_led_uchar() {
     char buf[5] = "";
     led_uchar_to_str(buf, 'â');
-    led_uchar_t uchar = led_uchar_of_str(buf);
+    led_uchar_t uc = led_uchar_of_str(buf);
     led_debug("native char: x=%X s=%s lc=%lc, ls=%lu, luc=%lu", 'â', "â", L'â', led_uchar_size_str("â"), led_uchar_size('â'));
-    led_debug("led_uchar:   x=%X s=%s lc=%lc, ls=%lu, luc=%lu", uchar, buf, uchar, led_uchar_size_str(buf), led_uchar_size(uchar));
+    led_debug("led_uchar:   x=%X s=%s lc=%lc, ls=%lu, luc=%lu", uc, buf, uc, led_uchar_size_str(buf), led_uchar_size(uc));
 }
 
 void test_led_uchar_isin() {
@@ -48,8 +48,8 @@ void test_led_str_app() {
 void test_led_str_uchar_last() {
     led_str_decl(test, 16);
     led_str_app_str(&test,"test=à");
-    led_uchar_t c = led_str_uchar_last(&test);
-    led_str_app_uchar(&test, c);
+    led_uchar_t uc = led_str_uchar_last(&test);
+    led_str_app_uchar(&test, uc);
     led_debug("%s",led_str_str(&test));
     led_assert(led_str_equal_str(&test, "test=àà"), LED_ERR_INTERNAL, "test_led_str_uchar_last");
 }
@@ -79,7 +79,7 @@ void test_led_str_foreach_uchar() {
     }
     led_assert(i == 6, LED_ERR_INTERNAL, "test_led_str_foreach_uchar_r: error in count");
     led_debug("with zone");
-    led_str_foreach_uchar_zone(&test,3,6) {
+    led_str_foreach_uchar_zn(&test,3,6) {
         led_str_decl(schar, 5);
         led_str_app_uchar(&schar, foreach.uc);
         i = foreach.uc_count;
@@ -99,12 +99,12 @@ void test_led_str_foreach_uchar_r() {
     }
     led_assert(i == 6, LED_ERR_INTERNAL, "test_led_str_foreach_uchar_r: error in count");
     led_debug("with zone");
-    led_str_foreach_uchar_zone_r(&test, 2, 5) {
+    led_str_foreach_uchar_zn_r(&test, 2, 5) {
         led_debug("%lu %lu %lu %c",foreach.i, foreach.i_next, foreach.uc_count, foreach.uc);
         i = foreach.uc_count;
     }
     led_assert(i == 3, LED_ERR_INTERNAL, "test_led_str_foreach_uchar_r: error in count");
-    //led_assert(led_str_equal_str(&test, "test="), LED_ERR_INTERNAL, "test_led_str_foreach_uchar_zone");
+    //led_assert(led_str_equal_str(&test, "test="), LED_ERR_INTERNAL, "test_led_str_foreach_uchar_zn");
 }
 
 void test_led_str_cut_next() {
