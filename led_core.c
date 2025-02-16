@@ -415,8 +415,6 @@ void led_init(size_t argc, char* argv[]) {
     led_init_config();
 
     led_debug("led_init: config sel.count=%d", led.sel.count);
-    led_debug("led_init: config sel.type_start=%d", led.sel.type_start);
-    led_debug("led_init: config sel.type_stop=%d", led.sel.type_stop);
     led_debug("led_init: config func count=%d", led.func_count);
 
 }

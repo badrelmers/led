@@ -220,19 +220,15 @@ void led_fn_impl_range_sel(led_fn_t* pfunc) {
         size_t uval = pfunc->arg[0].uval;
         if (val >= 0) {
             led.line_prep.zone_start = 0;
-            led_foreach_int(uval) {
-                led_debug("led_fn_impl_range_sel: %lu", foreach.i);
+            led_foreach_int(uval)
                 if (led.line_prep.zone_start < led_str_len(&led.line_prep.lstr))
                     led_str_uchar_next(&led.line_prep.lstr, led.line_prep.zone_start, &led.line_prep.zone_start);
-            }
         }
         else {
             led.line_prep.zone_start = led_str_len(&led.line_prep.lstr);
-            led_foreach_int(uval) {
-                led_debug("led_fn_impl_range_sel: %lu", foreach.i);
+            led_foreach_int(uval)
                 if (led.line_prep.zone_start > 0)
                     led_str_uchar_prev(&led.line_prep.lstr, led.line_prep.zone_start, &led.line_prep.zone_start);
-            }
         }
     }
     if (led_str_iscontent(&pfunc->arg[1].lstr)) {
@@ -254,17 +250,25 @@ void led_fn_impl_range_unsel(led_fn_t* pfunc) {
     if (led_str_iscontent(&pfunc->arg[0].lstr)) {
         long val = pfunc->arg[0].val;
         size_t uval = pfunc->arg[0].uval;
-        if (val >= 0)
-            for (led.line_prep.zone_start = 0; led.line_prep.zone_start < led_str_len(&led.line_prep.lstr) && uval > 0; uval-- )
-                led_str_uchar_next(&led.line_prep.lstr, led.line_prep.zone_start, &led.line_prep.zone_start);
-        else
-            for (led.line_prep.zone_start = led_str_len(&led.line_prep.lstr); led.line_prep.zone_start > 0 && uval > 0; uval-- )
-                led_str_uchar_prev(&led.line_prep.lstr, led.line_prep.zone_start, &led.line_prep.zone_start);
+        if (val >= 0) {
+            led.line_prep.zone_start = 0;
+            led_foreach_int(uval)
+                if (led.line_prep.zone_start < led_str_len(&led.line_prep.lstr))
+                    led_str_uchar_next(&led.line_prep.lstr, led.line_prep.zone_start, &led.line_prep.zone_start);
+        }
+        else {
+            led.line_prep.zone_start = led_str_len(&led.line_prep.lstr);
+            led_foreach_int(uval)
+                if (led.line_prep.zone_start > 0)
+                    led_str_uchar_prev(&led.line_prep.lstr, led.line_prep.zone_start, &led.line_prep.zone_start);
+        }
     }
     if (led_str_iscontent(&pfunc->arg[1].lstr)) {
         size_t uval = pfunc->arg[1].uval;
-        for (led.line_prep.zone_stop = led.line_prep.zone_start; led.line_prep.zone_stop < led_str_len(&led.line_prep.lstr) && uval > 0; uval-- )
-            led_str_uchar_next(&led.line_prep.lstr, led.line_prep.zone_stop, &led.line_prep.zone_stop);
+        led.line_prep.zone_stop = led.line_prep.zone_start;
+        led_foreach_int(uval)
+            if (led.line_prep.zone_stop < led_str_len(&led.line_prep.lstr))
+                led_str_uchar_next(&led.line_prep.lstr, led.line_prep.zone_stop, &led.line_prep.zone_stop);
     }
     else
         led.line_prep.zone_stop = led_str_len(&led.line_prep.lstr);
