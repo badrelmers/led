@@ -56,15 +56,15 @@ void led_debug(const char* message, ...);
         foreach.c;\
         foreach.c = (STR)[++foreach.i])
 
+#define led_foreach_uchar(STR) \
+    for (struct{size_t i; led_uchar_t uc; size_t uc_len;} foreach = {0, led_uchar_of_str(STR), led_uchar_size_str(STR)};\
+        foreach.uc;\
+        foreach.i += foreach.uc_len, foreach.uc_len = led_uchar_from_str(STR + foreach.i, &foreach.uc ))
+
 #define led_foreach_int_range(START, STOP) \
     for (struct{size_t i;} foreach = {0};\
         foreach.i < (size_t)STOP;\
         foreach.i++)
-
-#define led_foreach_r_int_range(START, STOP) \
-    for (struct{size_t i;} foreach = {STOP - 1};\
-        foreach.i < (size_t)STOP && foreach.i >= (size_t)START;\
-        foreach.i--)
 
 #define led_foreach_int(LEN) led_foreach_int_range(0, LEN)
 
@@ -147,10 +147,9 @@ inline led_uchar_t led_uchar_of_str(const char* str) {
 }
 
 
-inline bool led_uchar_isin(led_uchar_t c, const char* str) {
-    led_uchar_t cstr;
-    for (size_t i = 0, in = led_uchar_from_str(str, &cstr); str[i]; i += in, in = led_uchar_from_str(str + i, &cstr))
-        if (c == cstr) return true;
+inline bool led_uchar_isin(led_uchar_t uc, const char* str) {
+    led_foreach_uchar(str)
+        if (uc == foreach.uc) return true;
     return false;
 }
 
@@ -202,16 +201,16 @@ typedef struct {
 #define led_str_foreach_char(VAR) led_str_foreach_char_zone(VAR, 0, led_str_len(VAR))
 
 #define led_str_foreach_uchar_zone(VAR, START, STOP) \
-    for (struct{size_t i; size_t in; led_uchar_t uc; size_t nuc; size_t ucl;} foreach = {START, led_str_pos_uchar_next(VAR, START), led_str_uchar_at(VAR, START), 1, led_uchar_size_str((VAR)->str + START)};\
+    for (struct{size_t i; size_t i_next; led_uchar_t uc; size_t uc_count; size_t uc_size;} foreach = {START, led_str_pos_uchar_next(VAR, START), led_str_uchar_at(VAR, START), 1, led_str_uchar_size_at(VAR, START)};\
         foreach.i < STOP;\
-        foreach.i = foreach.in, foreach.uc = led_str_uchar_next(VAR, foreach.in, &foreach.in), foreach.nuc++, foreach.ucl = foreach.in - foreach.i)
+        foreach.i = foreach.i_next, foreach.uc = led_str_uchar_next(VAR, foreach.i_next, &foreach.i_next), foreach.uc_count++, foreach.uc_size = foreach.i_next - foreach.i)
 
 #define led_str_foreach_uchar(VAR) led_str_foreach_uchar_zone(VAR, 0, led_str_len(VAR))
 
 #define led_str_foreach_uchar_zone_r(VAR, START, STOP) \
-    for (struct{size_t i; size_t in; led_uchar_t uc; size_t nuc; size_t ucl;} foreach = {led_str_pos_uchar_prev(VAR, STOP), STOP, led_str_uchar_prev(VAR, STOP, NULL), 1, STOP - led_str_pos_uchar_prev(VAR, STOP)};\
-        foreach.in > START;\
-        foreach.in = foreach.i, foreach.uc = led_str_uchar_prev(VAR, foreach.i, &foreach.i), foreach.nuc++, foreach.ucl = foreach.in - foreach.i)
+    for (struct{size_t i; size_t i_next; led_uchar_t uc; size_t uc_count; size_t uc_size;} foreach = {led_str_pos_uchar_prev(VAR, STOP), STOP, led_str_uchar_prev(VAR, STOP, NULL), 1, STOP - led_str_pos_uchar_prev(VAR, STOP)};\
+        foreach.i_next > START;\
+        foreach.i_next = foreach.i, foreach.uc = led_str_uchar_prev(VAR, foreach.i, &foreach.i), foreach.uc_count++, foreach.uc_size = foreach.i_next - foreach.i)
 
 #define led_str_foreach_uchar_r(VAR) led_str_foreach_uchar_zone_r(VAR, 0, led_str_len(VAR))
 
@@ -300,14 +299,10 @@ inline led_str_t* led_str_app_zn(led_str_t* lstr, led_str_t* lstr_src, size_t st
 }
 
 inline led_str_t* led_str_app_uchar(led_str_t* lstr, led_uchar_t uchar) {
-    char buf[4];
-    char* str = buf;
-    size_t uchar_len = led_uchar_to_str(str, uchar);
-    if (lstr->len + uchar_len < lstr->size) {
-        while (uchar_len) {
-            lstr->str[lstr->len++] = *(str++);
-            uchar_len--;
-        }
+    size_t uc_size = led_uchar_size(uchar);
+    if (lstr->len + uc_size < lstr->size) {
+        led_uchar_to_str(lstr->str + lstr->len, uchar);
+        lstr->len += uc_size;
         lstr->str[lstr->len] = '\0';
     }
     return lstr;
@@ -373,6 +368,10 @@ inline led_uchar_t led_str_uchar_at(led_str_t* lstr, size_t idx) {
     return uchar;
 }
 
+inline led_uchar_t led_str_uchar_size_at(led_str_t* lstr, size_t idx) {
+    return idx <= lstr->len ? led_uchar_size_str(lstr->str + idx): 0;
+}
+
 inline led_uchar_t led_str_uchar_first(led_str_t* lstr) {
     return led_str_uchar_at(lstr, 0);
 }
@@ -406,7 +405,7 @@ inline size_t led_str_pos_uchar_prev(led_str_t* lstr, size_t idx) {
 
 inline led_uchar_t led_str_uchar_n(led_str_t* lstr, size_t n) {
     led_str_foreach_uchar(lstr)
-        if (foreach.nuc == n)
+        if (foreach.uc_count == n)
             return foreach.uc;
     return '\0';
 }

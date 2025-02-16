@@ -107,10 +107,10 @@ led_str_t* led_str_cut_next(led_str_t* lstr, led_uchar_t uchar, led_str_t* stok)
         if ( foreach.uc == uchar ) {
             stok->str[foreach.i] = '\0';
             stok->len = foreach.i;
-            stok->size = foreach.in;
-            lstr->str += foreach.in;
-            lstr->len -= foreach.in;
-            lstr->size -= foreach.in;
+            stok->size = foreach.i_next;
+            lstr->str += foreach.i_next;
+            lstr->len -= foreach.i_next;
+            lstr->size -= foreach.i_next;
             // led_debug("led_str_cut_next - lstr=%s tok=%s", lstr->str, stok->str);
             return lstr;
         }

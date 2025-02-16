@@ -157,7 +157,7 @@ bool led_init_opt(led_str_t* arg) {
                     led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", foreach.uc);
                     led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", foreach.uc);
                     led.opt.file_out = LED_OUTPUT_FILE_WRITE;
-                    optstr = led_str_str_at(arg, foreach.in);
+                    optstr = led_str_str_at(arg, foreach.i_next);
                     led_str_init_str(&led.opt.file_out_path, optstr);
                     led_debug("led_init_opt: path=%s", led_str_str(&led.opt.file_out_path));
                     break;
@@ -165,7 +165,7 @@ bool led_init_opt(led_str_t* arg) {
                     led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", foreach.uc);
                     led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", foreach.uc);
                     led.opt.file_out = LED_OUTPUT_FILE_APPEND;
-                    optstr = led_str_str_at(arg, foreach.in);
+                    optstr = led_str_str_at(arg, foreach.i_next);
                     led_str_init_str(&led.opt.file_out_path, optstr);
                     led_debug("led_init_opt: path=%s", led_str_str(&led.opt.file_out_path));
                     break;
@@ -173,7 +173,7 @@ bool led_init_opt(led_str_t* arg) {
                     led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", foreach.uc);
                     led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", foreach.uc);
                     led.opt.file_out = LED_OUTPUT_FILE_NEWEXT;
-                    optstr = led_str_str_at(arg, foreach.in);
+                    optstr = led_str_str_at(arg, foreach.i_next);
                     led.opt.file_out_extn = atoi(optstr);
                     if (led.opt.file_out_extn <= 0)
                         led_str_init_str(&led.opt.file_out_ext, optstr);
@@ -183,7 +183,7 @@ bool led_init_opt(led_str_t* arg) {
                     led_assert(!led.opt.file_out, LED_ERR_ARG, "Bad option -%c, output file mode already set", foreach.uc);
                     led_assert(!led.opt.exec, LED_ERR_ARG, "Bad option -%c, exec mode already set", foreach.uc);
                     led.opt.file_out = LED_OUTPUT_FILE_DIR;
-                    optstr = led_str_str_at(arg, foreach.in);
+                    optstr = led_str_str_at(arg, foreach.i_next);
                     led_str_init_str(&led.opt.file_out_dir, optstr);
                     led_debug("led_init_opt: dir=%s", led_str_str(&led.opt.file_out_dir));
                     break;

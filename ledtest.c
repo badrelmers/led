@@ -30,6 +30,12 @@ void test_led_uchar() {
     led_debug("led_uchar:   x=%X s=%s lc=%lc, ls=%lu, luc=%lu", uchar, buf, uchar, led_uchar_size_str(buf), led_uchar_size(uchar));
 }
 
+void test_led_uchar_isin() {
+    led_assert(led_uchar_isin('t', "a testAâ"), LED_ERR_INTERNAL, "led_uchar_isin");
+    led_assert(led_uchar_isin('â', "a testAâ"), LED_ERR_INTERNAL, "led_uchar_isin");
+    led_assert(!led_uchar_isin('b', "a testAâ"), LED_ERR_INTERNAL, "led_uchar_isin");
+}
+
 void test_led_str_app() {
     led_str_decl(test, 16);
     led_str_app_str(&test,"a test");
@@ -68,16 +74,16 @@ void test_led_str_foreach_uchar() {
     led_str_foreach_uchar(&test) {
         led_str_decl(schar, 5);
         led_str_app_uchar(&schar, foreach.uc);
-        i = foreach.nuc;
-        led_debug("%lu %lu %lu %s",foreach.i, foreach.in, foreach.nuc, led_str_str(&schar));
+        i = foreach.uc_count;
+        led_debug("%lu %lu %lu %s",foreach.i, foreach.i_next, foreach.uc_count, led_str_str(&schar));
     }
     led_assert(i == 6, LED_ERR_INTERNAL, "test_led_str_foreach_uchar_r: error in count");
     led_debug("with zone");
     led_str_foreach_uchar_zone(&test,3,6) {
         led_str_decl(schar, 5);
         led_str_app_uchar(&schar, foreach.uc);
-        i = foreach.nuc;
-        led_debug("%lu %lu %lu %s",foreach.i, foreach.in, foreach.nuc, led_str_str(&schar));
+        i = foreach.uc_count;
+        led_debug("%lu %lu %lu %s",foreach.i, foreach.i_next, foreach.uc_count, led_str_str(&schar));
     }
     led_assert(i == 3, LED_ERR_INTERNAL, "test_led_str_foreach_uchar_r: error in count");
 }
@@ -88,14 +94,14 @@ void test_led_str_foreach_uchar_r() {
 
     size_t i = 0;
     led_str_foreach_uchar_r(&test) {
-        led_debug("%lu %lu %lu %c",foreach.i, foreach.in, foreach.nuc, foreach.uc);
-        i = foreach.nuc;
+        led_debug("%lu %lu %lu %c",foreach.i, foreach.i_next, foreach.uc_count, foreach.uc);
+        i = foreach.uc_count;
     }
     led_assert(i == 6, LED_ERR_INTERNAL, "test_led_str_foreach_uchar_r: error in count");
     led_debug("with zone");
     led_str_foreach_uchar_zone_r(&test, 2, 5) {
-        led_debug("%lu %lu %lu %c",foreach.i, foreach.in, foreach.nuc, foreach.uc);
-        i = foreach.nuc;
+        led_debug("%lu %lu %lu %c",foreach.i, foreach.i_next, foreach.uc_count, foreach.uc);
+        i = foreach.uc_count;
     }
     led_assert(i == 3, LED_ERR_INTERNAL, "test_led_str_foreach_uchar_r: error in count");
     //led_assert(led_str_equal_str(&test, "test="), LED_ERR_INTERNAL, "test_led_str_foreach_uchar_zone");
@@ -173,6 +179,7 @@ int main(int , char* []) {
     led.opt.verbose = true;
 
     test(test_led_uchar);
+    test(test_led_uchar_isin);
     test(test_led_str_app);
     test(test_led_str_uchar_last);
     test(test_led_str_trunk_uchar);

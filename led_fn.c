@@ -107,16 +107,16 @@ void led_fn_helper_substitute(led_fn_t* pfunc, led_str_t* sinput, led_str_t* sou
     led_str_foreach_uchar(&pfunc->arg[0].lstr) {
         if (led_str_isfull(&sreplace)) break;
 
-        if (foreach.uc == '$' && led_str_uchar_at(&pfunc->arg[0].lstr, foreach.in) == 'R') {
+        if (foreach.uc == '$' && led_str_uchar_at(&pfunc->arg[0].lstr, foreach.i_next) == 'R') {
             size_t ir = 0;
             // set next position after "$R".
-            foreach.in++;
+            foreach.i_next++;
             // check for the register ID if given.
-            if ( foreach.in < led_str_len(&pfunc->arg[0].lstr) && led_uchar_isdigit(led_str_uchar_at(&pfunc->arg[0].lstr, foreach.in)) ) {
+            if ( foreach.i_next < led_str_len(&pfunc->arg[0].lstr) && led_uchar_isdigit(led_str_uchar_at(&pfunc->arg[0].lstr, foreach.i_next)) ) {
                 // get register ID and increment next position.
-                ir = led_str_uchar_at(&pfunc->arg[0].lstr, foreach.in++) - '0';
+                ir = led_str_uchar_at(&pfunc->arg[0].lstr, foreach.i_next++) - '0';
             }
-            led_debug("led_fn_helper_substitute: Replace register %lu found at %lu next chars at %lu", ir, foreach.i, foreach.in) ;
+            led_debug("led_fn_helper_substitute: Replace register %lu found at %lu next chars at %lu", ir, foreach.i, foreach.i_next) ;
             led_str_foreach_uchar(&led.line_reg[ir].lstr)
                 led_str_app_uchar(&sreplace, foreach.uc);
         }
@@ -269,7 +269,7 @@ void led_fn_impl_translate(led_fn_t* pfunc) {
         led_uchar_t uct = '\0';
         led_str_foreach_uchar(&pfunc->arg[0].lstr) {
             if (foreach.uc == uc) {
-                if ((uct = led_str_uchar_n(&pfunc->arg[1].lstr, foreach.nuc)))
+                if ((uct = led_str_uchar_n(&pfunc->arg[1].lstr, foreach.uc_count)))
                     led_str_app_uchar(&led.line_write.lstr, uct);
                 break;
             }
@@ -330,7 +330,7 @@ void led_fn_impl_case_snake(led_fn_t* pfunc) {
     led_zone_pre_process(pfunc);
 
     led_str_foreach_uchar_zone(&led.line_prep.lstr, led.line_prep.zone_start, led.line_prep.zone_stop) {
-        led_uchar_t ucnext = led_str_uchar_at(&led.line_write.lstr, foreach.in);
+        led_uchar_t ucnext = led_str_uchar_at(&led.line_write.lstr, foreach.i_next);
         if (led_uchar_isalnum(foreach.uc))
             led_str_app_uchar(&led.line_write.lstr, led_uchar_tolower(foreach.uc));
         else if (ucnext != '_')
@@ -393,7 +393,7 @@ void led_fn_impl_trim(led_fn_t* pfunc) {
 
     led_str_foreach_uchar_zone_r(&led.line_prep.lstr, led.line_prep.zone_start, led.line_prep.zone_stop) {
         if (!led_uchar_isspace(foreach.uc)) {
-            led_str_app_zn(&led.line_write.lstr, &led.line_prep.lstr, led.line_prep.zone_start, foreach.in);
+            led_str_app_zn(&led.line_write.lstr, &led.line_prep.lstr, led.line_prep.zone_start, foreach.i_next);
             break;
         }
     }
@@ -419,7 +419,7 @@ void led_fn_impl_trim_right(led_fn_t* pfunc) {
 
     led_str_foreach_uchar_zone_r(&led.line_prep.lstr, led.line_prep.zone_start, led.line_prep.zone_stop) {
         if (!led_uchar_isspace(foreach.uc)) {
-            led_str_app_zn(&led.line_write.lstr, &led.line_prep.lstr, led.line_prep.zone_start, foreach.in);
+            led_str_app_zn(&led.line_write.lstr, &led.line_prep.lstr, led.line_prep.zone_start, foreach.i_next);
             break;
         }
     }
@@ -482,7 +482,7 @@ void led_fn_impl_url_encode(led_fn_t* pfunc) {
             led_str_app_uchar(&led.line_write.lstr, foreach.uc);
         else {
             led_uchar_t uchar = foreach.uc;
-            size_t ucharsz = foreach.ucl;
+            size_t ucharsz = foreach.uc_size;
             led_foreach_int(ucharsz) {
                 uint8_t cbyte = uchar >> (8*(ucharsz-1 - foreach.i));
                 pcbuf[1] = HEX[(cbyte >> 4) & 0x0F];
