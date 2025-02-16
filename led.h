@@ -56,11 +56,6 @@ void led_debug(const char* message, ...);
         foreach.c;\
         foreach.c = (STR)[++foreach.i])
 
-#define led_foreach_uchar(STR) \
-    for (struct{size_t i; led_uchar_t uc; size_t uc_len;} foreach = {0, led_uchar_of_str(STR), led_uchar_size_str(STR)};\
-        foreach.uc;\
-        foreach.i += foreach.uc_len, foreach.uc_len = led_uchar_from_str(STR + foreach.i, &foreach.uc ))
-
 #define led_foreach_int_range(START, STOP) \
     for (struct{size_t i;} foreach = {0};\
         foreach.i < (size_t)STOP;\
@@ -87,6 +82,11 @@ void led_debug(const char* message, ...);
 //------------------------------------------------------------------------------
 
 typedef uint32_t led_uchar_t;
+
+#define led_foreach_uchar(STR) \
+    for (struct{size_t i; led_uchar_t uc; size_t uc_len;} foreach = {0, led_uchar_of_str(STR), led_uchar_size_str(STR)};\
+        foreach.uc;\
+        foreach.i += foreach.uc_len, foreach.uc_len = led_uchar_from_str(STR + foreach.i, &foreach.uc ))
 
 extern const size_t led_uchar_size_table[];
 
@@ -146,13 +146,11 @@ inline led_uchar_t led_uchar_of_str(const char* str) {
     return uchar;
 }
 
-
 inline bool led_uchar_isin(led_uchar_t uc, const char* str) {
     led_foreach_uchar(str)
         if (uc == foreach.uc) return true;
     return false;
 }
-
 
 /* codepoints UFT-8 functions are not necessary but we let it if needed.
 
