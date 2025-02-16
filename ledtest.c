@@ -22,6 +22,14 @@
 
 #define test(NAME) printf("-- %s...\n", #NAME);NAME();printf("OK\n")
 
+void test_led_uchar() {
+    char buf[5] = "";
+    led_uchar_to_str(buf, 'â');
+    led_uchar_t uchar = led_uchar_of_str(buf);
+    led_debug("native char: x=%X s=%s lc=%lc, ls=%lu, luc=%lu", 'â', "â", L'â', led_uchar_size_str("â"), led_uchar_size('â'));
+    led_debug("led_uchar:   x=%X s=%s lc=%lc, ls=%lu, luc=%lu", uchar, buf, uchar, led_uchar_size_str(buf), led_uchar_size(uchar));
+}
+
 void test_led_str_app() {
     led_str_decl(test, 16);
     led_str_app_str(&test,"a test");
@@ -164,6 +172,7 @@ int main(int , char* []) {
     setlocale(LC_ALL, "");
     led.opt.verbose = true;
 
+    test(test_led_uchar);
     test(test_led_str_app);
     test(test_led_str_uchar_last);
     test(test_led_str_trunk_uchar);

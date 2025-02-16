@@ -99,7 +99,7 @@ inline size_t led_uchar_size_str(const char* str) {
 }
 
 inline size_t led_uchar_size(led_uchar_t c) {
-    return led_uchar_size_table[(c & 0xFF) >> 4];
+    return 1 + ((c&0x8000)>>15) + ((c&0x800000)>>23) + ((c&0x80000000)>>31);
 }
 
 inline bool led_uchar_iscont(char c) {
