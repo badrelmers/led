@@ -51,17 +51,17 @@ void led_free() {
         pcre2_code_free(led.sel.regex_stop);
         led.sel.regex_stop = NULL;
     }
-    for (size_t i = 0; i < led.func_count; i++) {
-        led_fn_t* pfunc = &led.func_list[i];
-        if (pfunc->regex != NULL) {
-            if (pfunc->regex != LED_REGEX_ALL_LINE) // will be deleted in a dedicated function.
-                pcre2_code_free(pfunc->regex);
+    led_foreach_pval(led.func_list) {
+        led_fn_t* pfunc = foreach.pval;
+        // LED_REGEX_ALL_LINE be deleted in a dedicated function.
+        if (pfunc->regex != NULL && pfunc->regex != LED_REGEX_ALL_LINE) {
+            pcre2_code_free(pfunc->regex);
             pfunc->regex = NULL;
         }
-        for (size_t i = 0; i < pfunc->arg_count; i++) {
-            if (pfunc->arg[i].regex != NULL) {
-                pcre2_code_free(pfunc->arg[i].regex);
-                pfunc->arg[i].regex = NULL;
+        led_foreach_pval(pfunc->arg) {
+            if (foreach.pval->regex != NULL) {
+                pcre2_code_free(foreach.pval->regex);
+                foreach.pval->regex = NULL;
             }
         }
     }
@@ -223,7 +223,7 @@ bool led_init_func(led_str_t* arg) {
         pfunc->id = led_fn_table_size();
         led_debug("led_init_func: table size=%d", led_fn_table_size());
         led_foreach_pval_len(led_fn_table_descriptor(0), led_fn_table_size())
-            if (led_str_equal_str(&fname, foreach.pv->short_name) || led_str_equal_str(&fname, foreach.pv->long_name)) {
+            if (led_str_equal_str(&fname, foreach.pval->short_name) || led_str_equal_str(&fname, foreach.pval->long_name)) {
                 led_debug("led_init_func: function found=%d", foreach.i);
                 pfunc->id = foreach.i;
                 break;
@@ -257,6 +257,7 @@ bool led_init_func(led_str_t* arg) {
 }
 
 bool led_init_sel(led_str_t* arg) {
+    led_debug("led_init_sel: %s", led_str_str(arg));
     bool rc = true;
     if (led_str_match_pat(arg, "^\\+[0-9]+$") && led.sel.type_start == SEL_TYPE_REGEX) {
         led.sel.val_start = strtol(arg->str, NULL, 10);
@@ -293,7 +294,7 @@ bool led_init_sel(led_str_t* arg) {
 
 void led_init_config() {
     led_foreach_pval_len(led.func_list, led.func_count) {
-        led_fn_t* pfunc = foreach.pv;
+        led_fn_t* pfunc = foreach.pval;
 
         led_fn_desc_t* pfn_desc = led_fn_table_descriptor(pfunc->id);
         led_debug("led_init_config: configure function=%s id=%d", pfn_desc->long_name, pfunc->id);
@@ -357,7 +358,7 @@ void led_init_config() {
     }
 }
 
-void led_init(int argc, char* argv[]) {
+void led_init(size_t argc, char* argv[]) {
     setlocale(LC_ALL, "");
     led_debug("led_init:");
 
@@ -371,12 +372,13 @@ void led_init(int argc, char* argv[]) {
     if (argc <= 1) led.opt.help = true;
 
     int arg_section = 0;
-    for (int argi=1; argi < argc; argi++) {
-        led_str_decl_str(arg, argv[argi]);
+    led_foreach_val_len(argv, argc) {
+        if (foreach.i == 0) continue; // bypass arg 0 as led command.
+        led_str_decl_str(arg, foreach.val);
 
         if (arg_section == ARGS_SEC_FILES) {
-            led.file_names = argv + argi;
-            led.file_count = argc - argi;
+            led.file_names = argv + foreach.i;
+            led.file_count = argc - foreach.i;
             led_debug("led_init: arg is file names with count=%lu", led.file_count);
             break;
         }
@@ -406,14 +408,17 @@ void led_init(int argc, char* argv[]) {
     led_line_reset(&led.line_read);
     led_line_reset(&led.line_prep);
     led_line_reset(&led.line_write);
-    for (size_t i=0; i<LED_REG_MAX; i++)
-        led_line_reset(&led.line_reg[i]);
+    led_foreach_int(LED_REG_MAX)
+        led_line_reset(&led.line_reg[foreach.i]);
 
-    // pre-configure the processor command
+        // pre-configure the processor command
     led_init_config();
 
-    led_debug("led_init: config sel count=%d", led.sel.count);
+    led_debug("led_init: config sel.count=%d", led.sel.count);
+    led_debug("led_init: config sel.type_start=%d", led.sel.type_start);
+    led_debug("led_init: config sel.type_stop=%d", led.sel.type_stop);
     led_debug("led_init: config func count=%d", led.func_count);
+
 }
 
 void led_help() {
@@ -475,17 +480,16 @@ for simple automatic word processing based on PCRE2 modern regular expressions.\
     fprintf(stderr, "|%.5s|%.20s|%.10s|%.50s|%.40s|\n", DASHS, DASHS, DASHS, DASHS, DASHS);
     fprintf(stderr, "| %-4s| %-19s| %-9s| %-49s| %-39s|\n", "Id", "Name", "Short", "Description", "Format");
     fprintf(stderr, "|%.5s|%.20s|%.10s|%.50s|%.40s|\n", DASHS, DASHS, DASHS, DASHS, DASHS);
-    for (size_t i = 0; i < led_fn_table_size(); i++) {
-        led_fn_desc_t* pfn_desc = led_fn_table_descriptor(i);
-        if (!pfn_desc->impl) fprintf(stderr, "\e[90m");
+    led_foreach_pval_len(led_fn_table_descriptor(0), led_fn_table_size()) {
+        if (!foreach.pval->impl) fprintf(stderr, "\e[90m");
         fprintf(stderr, "| %-4lu| %-19s| %-9s| %-49s| %-39s|\n",
-            i,
-            pfn_desc->long_name,
-            pfn_desc->short_name,
-            pfn_desc->help_desc,
-            pfn_desc->help_format
+            foreach.i,
+            foreach.pval->long_name,
+            foreach.pval->short_name,
+            foreach.pval->help_desc,
+            foreach.pval->help_format
        );
-        if (!pfn_desc->impl) fprintf(stderr, "\e[0m");
+        if (!foreach.pval->impl) fprintf(stderr, "\e[0m");
     }
     fprintf(stderr, "|%.5s|%.20s|%.10s|%.50s|%.40s|\n", DASHS, DASHS, DASHS, DASHS, DASHS);
 }
@@ -687,7 +691,7 @@ void led_process_exec() {
 }
 
 bool led_process_selector() {
-    led_debug("led_process_selector: ");
+    led_debug("led_process_selector: led.sel.type_start=%d %s", led.sel.type_start, led_str_str(&led.line_read.lstr));
 
     bool ready = false;
     // stop selection on stop boundary
@@ -698,6 +702,7 @@ bool led_process_selector() {
         ) {
         led.sel.inboundary = false;
         led.sel.count = 0;
+        led_debug("led_process_selector: stop selection");
     }
     if (led.sel.shift > 0) led.sel.shift--;
 
@@ -710,6 +715,7 @@ bool led_process_selector() {
         led.sel.inboundary = true;
         led.sel.shift = led.sel.val_start;
         led.sel.count = 0;
+        led_debug("led_process_selector: start selection");
     }
 
     led.sel.selected = led.sel.inboundary && led.sel.shift == 0;

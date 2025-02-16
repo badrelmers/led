@@ -30,10 +30,10 @@ void test_led_uchar() {
     led_debug("led_uchar:   x=%X s=%s lc=%lc, ls=%lu, luc=%lu", uc, buf, uc, led_uchar_size_str(buf), led_uchar_size(uc));
 }
 
-void test_led_uchar_isin() {
-    led_assert(led_uchar_isin('t', "a testAâ"), LED_ERR_INTERNAL, "led_uchar_isin");
-    led_assert(led_uchar_isin('â', "a testAâ"), LED_ERR_INTERNAL, "led_uchar_isin");
-    led_assert(!led_uchar_isin('b', "a testAâ"), LED_ERR_INTERNAL, "led_uchar_isin");
+void test_led_uchar_in_str() {
+    led_assert(led_uchar_in_str('t', "a testAâ"), LED_ERR_INTERNAL, "led_uchar_in_str");
+    led_assert(led_uchar_in_str('â', "a testAâ"), LED_ERR_INTERNAL, "led_uchar_in_str");
+    led_assert(!led_uchar_in_str('b', "a testAâ"), LED_ERR_INTERNAL, "led_uchar_in_str");
 }
 
 void test_led_str_app() {
@@ -179,7 +179,7 @@ int main(int , char* []) {
     led.opt.verbose = true;
 
     test(test_led_uchar);
-    test(test_led_uchar_isin);
+    test(test_led_uchar_in_str);
     test(test_led_str_app);
     test(test_led_str_uchar_last);
     test(test_led_str_trunk_uchar);

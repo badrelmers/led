@@ -218,17 +218,29 @@ void led_fn_impl_range_sel(led_fn_t* pfunc) {
     if (led_str_iscontent(&pfunc->arg[0].lstr)) {
         long val = pfunc->arg[0].val;
         size_t uval = pfunc->arg[0].uval;
-        if (val >= 0)
-            for (led.line_prep.zone_start = 0; led.line_prep.zone_start < led_str_len(&led.line_prep.lstr) && uval > 0; uval-- )
-                led_str_uchar_next(&led.line_prep.lstr, led.line_prep.zone_start, &led.line_prep.zone_start);
-        else
-            for (led.line_prep.zone_start = led_str_len(&led.line_prep.lstr); led.line_prep.zone_start > 0 && uval > 0; uval-- )
-                led_str_uchar_prev(&led.line_prep.lstr, led.line_prep.zone_start, &led.line_prep.zone_start);
+        if (val >= 0) {
+            led.line_prep.zone_start = 0;
+            led_foreach_int(uval) {
+                led_debug("led_fn_impl_range_sel: %lu", foreach.i);
+                if (led.line_prep.zone_start < led_str_len(&led.line_prep.lstr))
+                    led_str_uchar_next(&led.line_prep.lstr, led.line_prep.zone_start, &led.line_prep.zone_start);
+            }
+        }
+        else {
+            led.line_prep.zone_start = led_str_len(&led.line_prep.lstr);
+            led_foreach_int(uval) {
+                led_debug("led_fn_impl_range_sel: %lu", foreach.i);
+                if (led.line_prep.zone_start > 0)
+                    led_str_uchar_prev(&led.line_prep.lstr, led.line_prep.zone_start, &led.line_prep.zone_start);
+            }
+        }
     }
     if (led_str_iscontent(&pfunc->arg[1].lstr)) {
         size_t uval = pfunc->arg[1].uval;
-        for (led.line_prep.zone_stop = led.line_prep.zone_start; led.line_prep.zone_stop < led_str_len(&led.line_prep.lstr) && uval > 0; uval-- )
-            led_str_uchar_next(&led.line_prep.lstr, led.line_prep.zone_stop, &led.line_prep.zone_stop);
+        led.line_prep.zone_stop = led.line_prep.zone_start;
+        led_foreach_int(uval)
+            if (led.line_prep.zone_stop < led_str_len(&led.line_prep.lstr))
+                led_str_uchar_next(&led.line_prep.lstr, led.line_prep.zone_stop, &led.line_prep.zone_stop);
     }
     else
         led.line_prep.zone_stop = led_str_len(&led.line_prep.lstr);
@@ -478,7 +490,7 @@ void led_fn_impl_url_encode(led_fn_t* pfunc) {
 
     led_str_foreach_uchar_zn(&led.line_prep.lstr, led.line_prep.zone_start, led.line_prep.zone_stop)
         // we encode UTF8 chars byte per byte.
-        if (led_uchar_isalnum(foreach.uc) || led_uchar_isin(foreach.uc, NOTRESERVED))
+        if (led_uchar_isalnum(foreach.uc) || led_uchar_in_str(foreach.uc, NOTRESERVED))
             led_str_app_uchar(&led.line_write.lstr, foreach.uc);
         else {
             led_uchar_t uc = foreach.uc;
@@ -500,7 +512,7 @@ void led_fn_impl_shell_escape(led_fn_t* pfunc) {
     led_zn_pre_process(pfunc);
 
     led_str_foreach_uchar_zn(&led.line_prep.lstr, led.line_prep.zone_start, led.line_prep.zone_stop)
-        if (led_uchar_isalnum(foreach.uc) || led_str_ischar(&table, foreach.uc))
+        if (led_uchar_isalnum(foreach.uc) || led_str_has_uchar(&table, foreach.uc))
             led_str_app_uchar(&led.line_write.lstr, foreach.uc);
         else {
             led_str_app_uchar(&led.line_write.lstr, '\\');
@@ -577,7 +589,7 @@ void led_fn_impl_field_base(led_fn_t* pfunc, const char* field_sep) {
     bool was_sep = false;
 
     led_str_foreach_uchar_zn(&led.line_prep.lstr, led.line_prep.zone_start, led.line_prep.zone_stop) {
-        bool is_sep = led_str_ischar(&sepsval, foreach.uc);
+        bool is_sep = led_str_has_uchar(&sepsval, foreach.uc);
         led_debug("i=%lu sep=%d was=%d char=%c n=%lu", foreach.i, is_sep, was_sep, foreach.uc, n);
         if (was_sep && !is_sep) n++;
         if (n == field_n) {
@@ -606,7 +618,7 @@ void led_fn_impl_split_base(led_fn_t* pfunc, const char* field_sep) {
     led_zn_pre_process(pfunc);
 
     led_str_foreach_uchar_zn(&led.line_prep.lstr, led.line_prep.zone_start, led_str_len(&led.line_prep.lstr)) {
-        if ( led_str_ischar(&sepsval, foreach.uc) ) foreach.uc = '\n';
+        if ( led_str_has_uchar(&sepsval, foreach.uc) ) foreach.uc = '\n';
         led_str_app_uchar(&led.line_write.lstr, foreach.uc);
     }
     led_zn_post_process();
@@ -756,7 +768,7 @@ void led_fn_impl_generate(led_fn_t* pfunc) {
     led_uchar_t cdup = led_str_uchar_first(&pfunc->arg[0].lstr);
 
     if ( pfunc->arg[1].uval > 0  ) {
-        for (size_t i = 0; i < pfunc->arg[1].uval; i++)
+        led_foreach_int(pfunc->arg[1].uval)
             led_str_app_uchar(&led.line_write.lstr, cdup);
     }
     else {

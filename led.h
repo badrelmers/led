@@ -64,18 +64,18 @@ void led_debug(const char* message, ...);
 #define led_foreach_int(LEN) led_foreach_int_range(0, LEN)
 
 #define led_foreach_pval_len(ARRAY, LEN) \
-    for (struct{size_t i; typeof(ARRAY[0])* pv;} foreach = {0, ARRAY};\
+    for (struct{size_t i; typeof(*(ARRAY))* pval;} foreach = {0, ARRAY};\
         foreach.i < LEN;\
-        foreach.pv = &(ARRAY)[++foreach.i])
+        foreach.pval = &((ARRAY)[++foreach.i]))
 
-#define led_foreach_pval(ARRAY) led_foreach_pval_len(ARRAY, sizeof(ARRAY))
+#define led_foreach_pval(ARRAY) led_foreach_pval_len(ARRAY, sizeof(ARRAY)/sizeof(*(ARRAY)))
 
 #define led_foreach_val_len(ARRAY, LEN) \
-    for (struct{size_t i; typeof(ARRAY[0]) v;} foreach = {0, ARRAY[0]};\
+    for (struct{size_t i; typeof(*(ARRAY)) val;} foreach = {0, ARRAY[0]};\
         foreach.i < LEN;\
-        foreach.v = (ARRAY)[++foreach.i])
+        foreach.val = (ARRAY)[++foreach.i])
 
-#define led_foreach_val(ARRAY) led_foreach_val_len(ARRAY, sizeof(ARRAY))
+#define led_foreach_val(ARRAY) led_foreach_val_len(ARRAY, sizeof(ARRAY)/sizeof(*(ARRAY)))
 
 //------------------------------------------------------------------------------
 // LED UTF8 support
@@ -146,7 +146,7 @@ inline led_uchar_t led_uchar_of_str(const char* str) {
     return uc;
 }
 
-inline bool led_uchar_isin(led_uchar_t uc, const char* str) {
+inline bool led_uchar_in_str(led_uchar_t uc, const char* str) {
     led_foreach_uchar(str)
         if (uc == foreach.uc) return true;
     return false;
@@ -275,24 +275,29 @@ inline led_str_t* led_str_cpy_str(led_str_t* lstr, const char* str) {
 }
 
 inline led_str_t* led_str_app(led_str_t* lstr, led_str_t* lstr_src) {
-    for (size_t i = 0; i<lstr_src->len && lstr->len+1 < lstr->size; i++, lstr->len++)
-        lstr->str[lstr->len] = lstr_src->str[i];
+    led_str_foreach_char(lstr_src)
+        if (lstr->len+1 < lstr->size )
+            lstr->str[lstr->len++] = foreach.c;
+        else break;
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
 
 inline led_str_t* led_str_app_str(led_str_t* lstr, const char* str) {
-    for (size_t i = 0; str[i] && lstr->len+1 < lstr->size; i++, lstr->len++)
-        lstr->str[lstr->len] = str[i];
+    led_foreach_char(str)
+        if (lstr->len+1 < lstr->size )
+            lstr->str[lstr->len++] = foreach.c;
+        else break;
     lstr->str[lstr->len] = '\0';
     return lstr;
 }
 
 inline led_str_t* led_str_app_zn(led_str_t* lstr, led_str_t* lstr_src, size_t start, size_t stop) {
-    for (size_t i = start; i < stop && lstr_src->str[i] && lstr->len+1 < lstr->size; i++, lstr->len++)
-        lstr->str[lstr->len] = lstr_src->str[i];
+    led_str_foreach_char_zn(lstr_src, start, stop)
+        if (lstr->len+1 < lstr->size )
+            lstr->str[lstr->len++] = foreach.c;
+        else break;
     lstr->str[lstr->len] = '\0';
-    //led_debug("led_str_app_zn:  %s ==(%lu,%lu)==> %s", lstr_src->str, start, stop, lstr->str);
     return lstr;
 }
 
@@ -465,7 +470,7 @@ inline size_t led_str_rfind_uchar(led_str_t* lstr, led_uchar_t uc) {
     return led_str_rfind_uchar_zn(lstr, uc, 0, lstr->len);
 }
 
-inline bool led_str_ischar(led_str_t* lstr, led_uchar_t uc) {
+inline bool led_str_has_uchar(led_str_t* lstr, led_uchar_t uc) {
     return led_str_find_uchar(lstr, uc) < lstr->len;
 }
 
@@ -745,7 +750,7 @@ typedef struct {
 
 extern led_t led;
 
-void led_init(int argc, char* argv[]);
+void led_init(size_t argc, char* argv[]);
 void led_free();
 bool led_init_opt(led_str_t* arg);
 bool led_init_func(led_str_t* arg);
