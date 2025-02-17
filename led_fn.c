@@ -166,24 +166,23 @@ void led_fn_helper_substitute(led_fn_t* pfunc, led_str_t* sinput, led_str_t* sou
             }
     }
 
-    pcre2_code* regex = pfunc->regex;
-    if (!regex)
-        regex = led.opt.pack_selected ? LED_REGEX_ALL_MULTILINE: LED_REGEX_ALL_LINE;
+    if (!pfunc->regex)
+        pfunc->regex = led.opt.pack_selected ? LED_REGEX_ALL_MULTILINE: LED_REGEX_ALL_LINE;
 
     led_debug("led_fn_helper_substitute: Substitute input line (len=%d) to sreplace (len=%d)", led_str_len(sinput), led_str_len(&sreplace));
     PCRE2_SIZE len = led_str_size(soutput);
     int rc = pcre2_substitute(
-                regex,
-                (PCRE2_UCHAR*)led_str_str(sinput),
-                led_str_len(sinput),
-                0,
-                opts,
-                NULL,
-                NULL,
-                (PCRE2_UCHAR*)led_str_str(&sreplace),
-                led_str_len(&sreplace),
-                (PCRE2_UCHAR*)led_str_str(soutput),
-                &len);
+        pfunc->regex,
+        (PCRE2_UCHAR*)led_str_str(sinput),
+        led_str_len(sinput),
+        0,
+        opts,
+        NULL,
+        NULL,
+        (PCRE2_UCHAR*)led_str_str(&sreplace),
+        led_str_len(&sreplace),
+        (PCRE2_UCHAR*)led_str_str(soutput),
+        &len);
     led_assert_pcre(rc);
     soutput->len = len;
 }

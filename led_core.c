@@ -52,6 +52,8 @@ void led_free() {
         led.sel.regex_stop = NULL;
     }
     led_foreach_pval(led.func_list) {
+        // do not free STD regex here.
+        if (foreach.pval->regex == LED_REGEX_ALL_LINE || foreach.pval->regex == LED_REGEX_ALL_MULTILINE) continue;
         if (foreach.pval->regex != NULL) {
             pcre2_code_free(foreach.pval->regex);
             foreach.pval->regex = NULL;
