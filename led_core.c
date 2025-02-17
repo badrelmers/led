@@ -764,8 +764,8 @@ void led_process_functions() {
         if (led_line_isselected(&led.line_prep)) {
             led_debug("led_process_functions: prep line is selected");
             if (led.func_count > 0) {
-                for (size_t ifunc = 0; ifunc < led.func_count; ifunc++) {
-                    led_fn_t* pfunc = &led.func_list[ifunc];
+                led_foreach_pval_len(led.func_list, led.func_count) {
+                    led_fn_t* pfunc = foreach.pval;
                     led_fn_desc_t* pfn_desc = led_fn_table_descriptor(pfunc->id);
                     led.report.line_match_count++;
                     led_debug("led_process_functions: call=%s", pfn_desc->long_name);

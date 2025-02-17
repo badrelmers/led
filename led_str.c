@@ -132,16 +132,16 @@ size_t const led_uchar_size_table[] = {
 size_t led_uchar_from_str(const char* str, led_uchar_t* puchar) {
     size_t usize = led_uchar_size_str(str);
     *puchar = 0;
-    for (size_t i = 0; i < usize; i++)
-        *puchar = (*puchar << 8) | ((uint8_t*)str)[i];
+    led_foreach_int(usize)
+        *puchar = (*puchar << 8) | ((uint8_t*)str)[foreach.i];
     return usize;
 }
 
 size_t led_uchar_to_str(char* str, led_uchar_t uc) {
     uint32_t mask = 0xFF000000;
     size_t usize = 0;
-    for (size_t i = 0; i < 4; i++) {
-        uint8_t ubyte = (uc & mask) >> ((3-i)*8);
+    led_foreach_int(4) {
+        uint8_t ubyte = (uc & mask) >> ((3-foreach.i)*8);
         if (ubyte) {
             *((uint8_t*)str++) = ubyte;
             usize++;
