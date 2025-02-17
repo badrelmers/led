@@ -52,17 +52,9 @@ void led_free() {
         led.sel.regex_stop = NULL;
     }
     led_foreach_pval(led.func_list) {
-        led_fn_t* pfunc = foreach.pval;
-        // LED_REGEX_ALL_LINE be deleted in a dedicated function.
-        if (pfunc->regex != NULL && pfunc->regex != LED_REGEX_ALL_LINE) {
-            pcre2_code_free(pfunc->regex);
-            pfunc->regex = NULL;
-        }
-        led_foreach_pval(pfunc->arg) {
-            if (foreach.pval->regex != NULL) {
-                pcre2_code_free(foreach.pval->regex);
-                foreach.pval->regex = NULL;
-            }
+        if (foreach.pval->regex != NULL) {
+            pcre2_code_free(foreach.pval->regex);
+            foreach.pval->regex = NULL;
         }
     }
     led_regex_free();
@@ -104,6 +96,34 @@ void led_debug(const char* message, ...) {
 //-----------------------------------------------
 // LED init functions
 //-----------------------------------------------
+
+pcre2_code* LED_REGEX_ALL_LINE;
+pcre2_code* LED_REGEX_ALL_MULTILINE;
+pcre2_code* LED_REGEX_BLANK_LINE;
+pcre2_code* LED_REGEX_INTEGER;
+pcre2_code* LED_REGEX_REGISTER;
+pcre2_code* LED_REGEX_FUNC;
+pcre2_code* LED_REGEX_FUNC2;
+
+void led_regex_init() {
+    LED_REGEX_ALL_LINE = led_regex_compile("^.*$",0);
+    LED_REGEX_ALL_MULTILINE = led_regex_compile(".*", PCRE2_MULTILINE);
+    LED_REGEX_BLANK_LINE = led_regex_compile("^[ \t]*$",0);
+    LED_REGEX_INTEGER = led_regex_compile("^[0-9]+$",0);
+    LED_REGEX_REGISTER = led_regex_compile("\\$R[0-9]?",0);
+    LED_REGEX_FUNC = led_regex_compile("^[a-z0-9_]+/",0);
+    LED_REGEX_FUNC2 = led_regex_compile("^[a-z0-9_]+:",0);
+}
+
+void led_regex_free() {
+    if (LED_REGEX_ALL_LINE != NULL) { pcre2_code_free(LED_REGEX_ALL_LINE); LED_REGEX_ALL_LINE = NULL; }
+    if (LED_REGEX_ALL_MULTILINE != NULL) { pcre2_code_free(LED_REGEX_ALL_LINE); LED_REGEX_ALL_LINE = NULL; }
+    if (LED_REGEX_BLANK_LINE != NULL) { pcre2_code_free(LED_REGEX_BLANK_LINE); LED_REGEX_BLANK_LINE = NULL; }
+    if (LED_REGEX_INTEGER != NULL) { pcre2_code_free(LED_REGEX_INTEGER); LED_REGEX_INTEGER = NULL; }
+    if (LED_REGEX_REGISTER != NULL) { pcre2_code_free(LED_REGEX_REGISTER); LED_REGEX_REGISTER = NULL; }
+    if (LED_REGEX_FUNC != NULL) { pcre2_code_free(LED_REGEX_FUNC); LED_REGEX_FUNC = NULL; }
+    if (LED_REGEX_FUNC2 != NULL) { pcre2_code_free(LED_REGEX_FUNC2); LED_REGEX_FUNC2 = NULL; }
+}
 
 bool led_init_opt(led_str_t* arg) {
     bool rc = led_str_match_pat(arg, "^-[a-zA-Z]+");
@@ -237,11 +257,11 @@ bool led_init_func(led_str_t* arg) {
         led_str_cut_next(arg, fsep, &regx);
         if (!led_str_isempty(&regx)) {
             led_debug("led_init_func: regex found=%s", led_str_str(&regx));
-            pfunc->regex = led_str_regex_compile(&regx);
+            pfunc->regex = led_str_regex_compile(&regx, led.opt.pack_selected ? PCRE2_MULTILINE: 0);
         }
         else {
-            led_debug("led_init_func: regex NOT found, fixed to the whole line");
-            pfunc->regex = LED_REGEX_ALL_LINE;
+            led_debug("led_init_func: regex NOT found, no zone selection");
+            pfunc->regex = NULL;
         }
 
         // store func arguments
@@ -271,7 +291,7 @@ bool led_init_sel(led_str_t* arg) {
         }
         else {
             led.sel.type_start = SEL_TYPE_REGEX;
-            led.sel.regex_start = led_str_regex_compile(arg);
+            led.sel.regex_start = led_str_regex_compile(arg,0);
             led_debug("led_init_sel: selector start: type regex=%s", led_str_str(arg));
         }
     }
@@ -283,7 +303,7 @@ bool led_init_sel(led_str_t* arg) {
         }
         else {
             led.sel.type_stop = SEL_TYPE_REGEX;
-            led.sel.regex_stop = led_str_regex_compile(arg);
+            led.sel.regex_stop = led_str_regex_compile(arg,0);
             led_debug("led_init_sel: selector stop: type regex=%s", led_str_str(arg));
         }
     }
@@ -301,18 +321,7 @@ void led_init_config() {
 
         led_foreach_char(pfn_desc->args_fmt) {
             led_assert(foreach.i < LED_FARG_MAX, LED_ERR_ARG, "function arg %i exceed max defined %i\n%s", foreach.i, LED_FARG_MAX, pfn_desc->help_format);
-            if (foreach.c == 'R') {
-                led_assert(led_str_isinit(&pfunc->arg[foreach.i].lstr), LED_ERR_ARG, "function arg %i: missing regex\n%s", foreach.i+1, pfn_desc->help_format);
-                pfunc->arg[foreach.i].regex = led_str_regex_compile(&pfunc->arg[foreach.i].lstr);
-                led_debug("led_init_config: function arg=%i regex found", foreach.i+1);
-            }
-            else if (foreach.c == 'r') {
-                if (led_str_isinit(&pfunc->arg[foreach.i].lstr)) {
-                    pfunc->arg[foreach.i].regex = led_str_regex_compile(&pfunc->arg[foreach.i].lstr);
-                    led_debug("led_init_config: function arg=%i regex found", foreach.i+1);
-                }
-            }
-            else if (foreach.c == 'N') {
+            if (foreach.c == 'N') {
                 led_assert(led_str_isinit(&pfunc->arg[foreach.i].lstr), LED_ERR_ARG, "function arg %i: missing number\n%s", foreach.i+1, pfn_desc->help_format);
                 pfunc->arg[foreach.i].val = atol(led_str_str(&pfunc->arg[foreach.i].lstr));
                 led_debug("led_init_config: function arg=%i numeric found=%li", foreach.i+1, pfunc->arg[foreach.i].val);
@@ -727,9 +736,13 @@ bool led_process_selector() {
         if (led_line_isselected(&led.line_read)) {
             led_debug("led_process_selector: pack: append to ready");
             if (!(led.opt.filter_blank && led_str_isblank(&led.line_read.lstr))) {
-                if (led_str_iscontent(&led.line_prep.lstr))
-                    led_str_app_uchar(&led.line_prep.lstr, '\n');
-                led_str_app(&led.line_prep.lstr, &led.line_read.lstr);
+                if (led_line_isinit(&led.line_prep)) {
+                    if (led_str_iscontent(&led.line_prep.lstr))
+                        led_str_app_uchar(&led.line_prep.lstr, '\n');
+                    led_str_app(&led.line_prep.lstr, &led.line_read.lstr);
+                }
+                else
+                    led_line_cpy(&led.line_prep, &led.line_read);
             }
             led_line_select(&led.line_prep, true);
             led_line_reset(&led.line_read);
@@ -771,7 +784,7 @@ void led_process_functions() {
                     led_debug("led_process_functions: call=%s", pfn_desc->long_name);
                     (pfn_desc->impl)(pfunc);
                     led_line_cpy(&led.line_prep, &led.line_write);
-                    led_debug("led_process_functions: result=%s", led_str_str(&led.line_write.lstr));
+                    led_debug("led_process_functions: result=\n%s", led_str_str(&led.line_write.lstr));
                 }
             }
             else {
@@ -784,7 +797,7 @@ void led_process_functions() {
             led_line_cpy(&led.line_write, &led.line_prep);
         }
     }
-    led_debug("led_process_functions: result len=%d line=%s", led_str_len(&led.line_write.lstr), led_str_str(&led.line_write.lstr));
+    led_debug("led_process_functions: result len=%d line=\n%s", led_str_len(&led.line_write.lstr), led_str_str(&led.line_write.lstr));
     led_line_reset(&led.line_prep);
 }
 

@@ -531,6 +531,7 @@ inline led_str_t* led_str_dirname(led_str_t* lstr) {
 #define LED_RGX_GROUP_MATCH 2
 
 extern pcre2_code* LED_REGEX_ALL_LINE;
+extern pcre2_code* LED_REGEX_ALL_MULTILINE;
 extern pcre2_code* LED_REGEX_BLANK_LINE;
 extern pcre2_code* LED_REGEX_INTEGER;
 extern pcre2_code* LED_REGEX_REGISTER;
@@ -540,16 +541,17 @@ extern pcre2_code* LED_REGEX_FUNC2;
 void led_regex_init();
 void led_regex_free();
 
-pcre2_code* led_regex_compile(const char* pat);
+pcre2_code* led_regex_compile(const char* pat, size_t opt);
 bool led_str_match(led_str_t* lstr, pcre2_code* regex);
 bool led_str_match_offset(led_str_t* lstr, pcre2_code* regex, size_t* pzone_start, size_t* pzone_stop);
 
-inline pcre2_code* led_str_regex_compile(led_str_t* pat) {
-    return led_regex_compile(pat->str);
+inline pcre2_code* led_str_regex_compile(led_str_t* pat, size_t opt) {
+    return led_regex_compile(pat->str, opt);
 }
 
 inline bool led_str_match_pat(led_str_t* lstr, const char* pat) {
-    return led_str_match(lstr, led_regex_compile(pat));
+    // this function is allways used for single line match
+    return led_str_match(lstr, led_regex_compile(pat, 0));
 }
 
 inline bool led_str_isblank(led_str_t* lstr) {
@@ -667,7 +669,6 @@ typedef struct {
         led_str_t lstr;
         long val;
         size_t uval;
-        pcre2_code* regex;
     } arg[LED_FARG_MAX];
     size_t arg_count;
 } led_fn_t;

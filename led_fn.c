@@ -29,13 +29,20 @@
 #define countof(a) (sizeof(a)/sizeof(a[0]))
 
 bool led_zn_pre_process(led_fn_t* pfunc) {
+    bool rc;
     led_line_init(&led.line_write);
 
-    led.line_prep.zone_start = led.line_prep.zone_stop = led_str_len(&led.line_prep.lstr);
-    bool rc = led_str_match_offset(&led.line_prep.lstr, pfunc->regex, &led.line_prep.zone_start, &led.line_prep.zone_stop);
-
-    if (!led.opt.output_match)
-        led_str_app_zn(&led.line_write.lstr, &led.line_prep.lstr, 0, led.line_prep.zone_start);
+    if (pfunc->regex) {
+        led.line_prep.zone_start = led.line_prep.zone_stop = led_str_len(&led.line_prep.lstr);
+        rc = led_str_match_offset(&led.line_prep.lstr, pfunc->regex, &led.line_prep.zone_start, &led.line_prep.zone_stop);
+        if (!led.opt.output_match)
+            led_str_app_zn(&led.line_write.lstr, &led.line_prep.lstr, 0, led.line_prep.zone_start);
+    }
+    else {
+        led.line_prep.zone_start = 0;
+        led.line_prep.zone_stop = led_str_len(&led.line_prep.lstr);
+        rc = true;
+    }
 
     return rc;
 }
@@ -53,35 +60,43 @@ void led_fn_impl_register(led_fn_t* pfunc) {
     // register is a passtrough function, line stays unchanged
     led_line_cpy(&led.line_write, &led.line_prep);
 
-    pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(pfunc->regex, NULL);
-    int rc = pcre2_match(pfunc->regex, (PCRE2_SPTR)led_str_str(&led.line_prep.lstr), led_str_len(&led.line_prep.lstr), 0, 0, match_data, NULL);
-    PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(match_data);
-    led_debug("led_fn_impl_register: match_count %d ", rc);
+    if (pfunc->regex) {
+        pcre2_match_data* match_data = pcre2_match_data_create_from_pattern(pfunc->regex, NULL);
+        int rc = pcre2_match(pfunc->regex, (PCRE2_SPTR)led_str_str(&led.line_prep.lstr), led_str_len(&led.line_prep.lstr), 0, 0, match_data, NULL);
+        PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(match_data);
+        led_debug("led_fn_impl_register: match_count %d ", rc);
 
-    if (pfunc->arg_count > 0) {
-        // usecase with fixed register ID argument
-        size_t ir = pfunc->arg[0].uval;
-        led_assert(ir < LED_REG_MAX, LED_ERR_ARG, "Register ID %lu exeed maximum register ID %d", ir, LED_REG_MAX-1);
-        if( rc > 0) {
-            int iv = (rc - 1) * 2;
-            led_debug("led_fn_impl_register: match_offset values %d %d", ovector[iv], ovector[iv+1]);
-            led_line_init(&led.line_reg[ir]);
-            led_str_app_zn(&led.line_reg[ir].lstr, &led.line_prep.lstr, ovector[iv], ovector[iv+1]);
-            led_debug("led_fn_impl_register: register value %d (%s)", ir, led_str_str(&led.line_reg[ir].lstr));
+        if (pfunc->arg_count > 0) {
+            // usecase with fixed register ID argument
+            size_t ir = pfunc->arg[0].uval;
+            led_assert(ir < LED_REG_MAX, LED_ERR_ARG, "Register ID %lu exeed maximum register ID %d", ir, LED_REG_MAX-1);
+            if( rc > 0) {
+                int iv = (rc - 1) * 2;
+                led_debug("led_fn_impl_register: match_offset values %d %d", ovector[iv], ovector[iv+1]);
+                led_line_init(&led.line_reg[ir]);
+                led_str_app_zn(&led.line_reg[ir].lstr, &led.line_prep.lstr, ovector[iv], ovector[iv+1]);
+                led_debug("led_fn_impl_register: register value %d (%s)", ir, led_str_str(&led.line_reg[ir].lstr));
+            }
         }
+        else {
+            // usecase with unfixed register ID, catch all groups and distribute into registers, R0 is the global matching zone
+            led_foreach_int(rc)
+                if (foreach.i < LED_REG_MAX) {
+                    int iv = foreach.i * 2;
+                    led_debug("led_fn_impl_register: match_offset values %d %d", ovector[iv], ovector[iv+1]);
+                    led_line_init(&led.line_reg[foreach.i]);
+                    led_str_app_zn(&led.line_reg[foreach.i].lstr, &led.line_prep.lstr, ovector[iv], ovector[iv+1]);
+                    led_debug("led_fn_impl_register: register value %d (%s)", foreach.i, led_str_str(&led.line_reg[foreach.i].lstr));
+                }
+        }
+        pcre2_match_data_free(match_data);
     }
     else {
-        // usecase with unfixed register ID, catch all groups and distribute into registers, R0 is the global matching zone
-        led_foreach_int(rc)
-            if (foreach.i < LED_REG_MAX) {
-                int iv = foreach.i * 2;
-                led_debug("led_fn_impl_register: match_offset values %d %d", ovector[iv], ovector[iv+1]);
-                led_line_init(&led.line_reg[foreach.i]);
-                led_str_app_zn(&led.line_reg[foreach.i].lstr, &led.line_prep.lstr, ovector[iv], ovector[iv+1]);
-                led_debug("led_fn_impl_register: register value %d (%s)", foreach.i, led_str_str(&led.line_reg[foreach.i].lstr));
-            }
+        led_debug("led_fn_impl_register: no regx, match all");
+        size_t ir = pfunc->arg_count > 0 ? pfunc->arg[0].uval : 0;
+        led_assert(ir < LED_REG_MAX, LED_ERR_ARG, "Register ID %lu exeed maximum register ID %d", ir, LED_REG_MAX-1);
+        led_line_cpy(&led.line_reg[ir], &led.line_prep);
     }
-    pcre2_match_data_free(match_data);
 }
 
 void led_fn_impl_register_recall(led_fn_t* pfunc) {
@@ -89,8 +104,14 @@ void led_fn_impl_register_recall(led_fn_t* pfunc) {
     led_assert(ir < LED_REG_MAX, LED_ERR_ARG, "Register ID %lu exeed maximum register ID %d", ir, LED_REG_MAX-1);
 
     if (led_line_isinit(&led.line_reg[ir])) {
-        led.line_reg[ir].zone_start = led.line_reg[ir].zone_stop = led_str_len(&led.line_reg[ir].lstr);
-        led_str_match_offset(&led.line_reg[ir].lstr, pfunc->regex, &led.line_reg[ir].zone_start, &led.line_reg[ir].zone_stop);
+        if (pfunc->regex) {
+            led.line_reg[ir].zone_start = led.line_reg[ir].zone_stop = led_str_len(&led.line_reg[ir].lstr);
+            led_str_match_offset(&led.line_reg[ir].lstr, pfunc->regex, &led.line_reg[ir].zone_start, &led.line_reg[ir].zone_stop);
+        }
+        else {
+            led.line_reg[ir].zone_start = 0;
+            led.line_reg[ir].zone_stop = led_str_len(&led.line_reg[ir].lstr);
+        }
         led_line_init(&led.line_write);
         led_str_app_zn(&led.line_write.lstr, &led.line_reg[ir].lstr, led.line_reg[ir].zone_start, led.line_reg[ir].zone_stop);
     }
@@ -145,19 +166,23 @@ void led_fn_helper_substitute(led_fn_t* pfunc, led_str_t* sinput, led_str_t* sou
             }
     }
 
+    pcre2_code* regex = pfunc->regex;
+    if (!regex)
+        regex = led.opt.pack_selected ? LED_REGEX_ALL_MULTILINE: LED_REGEX_ALL_LINE;
+
     led_debug("led_fn_helper_substitute: Substitute input line (len=%d) to sreplace (len=%d)", led_str_len(sinput), led_str_len(&sreplace));
     PCRE2_SIZE len = led_str_size(soutput);
     int rc = pcre2_substitute(
-                pfunc->regex,
-                (PCRE2_UCHAR8*)led_str_str(sinput),
+                regex,
+                (PCRE2_UCHAR*)led_str_str(sinput),
                 led_str_len(sinput),
                 0,
                 opts,
                 NULL,
                 NULL,
-                (PCRE2_UCHAR8*)led_str_str(&sreplace),
+                (PCRE2_UCHAR*)led_str_str(&sreplace),
                 led_str_len(&sreplace),
-                (PCRE2_UCHAR8*)led_str_str(soutput),
+                (PCRE2_UCHAR*)led_str_str(soutput),
                 &len);
     led_assert_pcre(rc);
     soutput->len = len;

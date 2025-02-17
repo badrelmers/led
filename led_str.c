@@ -36,32 +36,7 @@ led_str_t* led_str_init(led_str_t* lstr, char* buf, size_t size) {
     return lstr;
 }
 
-pcre2_code* LED_REGEX_ALL_LINE = NULL;
-pcre2_code* LED_REGEX_BLANK_LINE = NULL;
-pcre2_code* LED_REGEX_INTEGER = NULL;
-pcre2_code* LED_REGEX_REGISTER = NULL;
-pcre2_code* LED_REGEX_FUNC = NULL;
-pcre2_code* LED_REGEX_FUNC2 = NULL;
-
-void led_regex_init() {
-    if (LED_REGEX_ALL_LINE == NULL) LED_REGEX_ALL_LINE = led_regex_compile("^.*$");
-    if (LED_REGEX_BLANK_LINE == NULL) LED_REGEX_BLANK_LINE = led_regex_compile("^[ \t]*$");
-    if (LED_REGEX_INTEGER == NULL) LED_REGEX_INTEGER = led_regex_compile("^[0-9]+$");
-    if (LED_REGEX_REGISTER == NULL) LED_REGEX_REGISTER = led_regex_compile("\\$R[0-9]?");
-    if (LED_REGEX_FUNC == NULL) LED_REGEX_FUNC = led_regex_compile("^[a-z0-9_]+/");
-    if (LED_REGEX_FUNC2 == NULL) LED_REGEX_FUNC2 = led_regex_compile("^[a-z0-9_]+:");
-}
-
-void led_regex_free() {
-    if (LED_REGEX_ALL_LINE != NULL) { pcre2_code_free(LED_REGEX_ALL_LINE); LED_REGEX_ALL_LINE = NULL; }
-    if (LED_REGEX_BLANK_LINE != NULL) { pcre2_code_free(LED_REGEX_BLANK_LINE); LED_REGEX_BLANK_LINE = NULL; }
-    if (LED_REGEX_INTEGER != NULL) { pcre2_code_free(LED_REGEX_INTEGER); LED_REGEX_INTEGER = NULL; }
-    if (LED_REGEX_REGISTER != NULL) { pcre2_code_free(LED_REGEX_REGISTER); LED_REGEX_REGISTER = NULL; }
-    if (LED_REGEX_FUNC != NULL) { pcre2_code_free(LED_REGEX_FUNC); LED_REGEX_FUNC = NULL; }
-    if (LED_REGEX_FUNC2 != NULL) { pcre2_code_free(LED_REGEX_FUNC2); LED_REGEX_FUNC2 = NULL; }
-}
-
-pcre2_code* led_regex_compile(const char* pattern) {
+pcre2_code* led_regex_compile(const char* pattern, size_t opt) {
     int pcre_err;
     PCRE2_SIZE pcre_erroff;
     PCRE2_UCHAR pcre_errbuf[256];
@@ -69,7 +44,7 @@ pcre2_code* led_regex_compile(const char* pattern) {
     pcre2_code* regex = pcre2_compile(
         (PCRE2_SPTR)pattern,
         PCRE2_ZERO_TERMINATED,
-        PCRE2_UTF,
+        PCRE2_UTF|opt,
         &pcre_err,
         &pcre_erroff,
         NULL);
