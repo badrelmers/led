@@ -776,27 +776,3 @@ typedef struct {
 } led_t;
 
 extern led_t led;
-
-void led_init(size_t argc, char* argv[]);
-void led_free();
-bool led_init_opt(led_str_t* arg);
-bool led_init_func(led_str_t* arg);
-bool led_init_sel(led_str_t* arg);
-void led_init_config();
-void led_help();
-
-void led_file_open_in();
-void led_file_close_in();
-void led_file_stdin();
-void led_file_open_out();
-void led_file_close_out();
-void led_file_print_out();
-void led_file_stdout();
-bool led_file_next();
-
-bool led_process_read();
-void led_process_write();
-void led_process_exec();
-bool led_process_selector();
-void led_process_functions();
-void led_report();

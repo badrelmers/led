@@ -13,7 +13,7 @@ SOURCEDIR 	= $(dir $(realpath $(MAKEFILE)))
 SOURCES     = $(wildcard *.c)
 OBJECTS		= $(patsubst %.c,%.o,$(SOURCES))
 APP			= led
-APPTEST 	= $(APP)test
+APPTEST 	= $(APP)_utest
 ARCNAME		= $(APP)-linux-amd64.tgz
 LIBS        = -lpcre2-8 -lb64
 VERSION     = 1.0.3
@@ -50,7 +50,7 @@ distclean: clean
 ####### Test
 
 utest: $(APPTEST)
-	./ledtest
+	./led_utest
 
 test: $(APP) utest
 	./test.sh
